@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { InputField } from '../molecules/InputField';
 import { Button } from '../atoms/Button';
+import { resetPassword } from '../../auth/passwordApi';
+import { PasswordCriteria } from './PasswordCriteria';
 
 interface ResetPasswordModalProps {
   open: boolean;
@@ -34,12 +36,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ open, on
     }
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: newPassword }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+      await resetPassword(email, newPassword);
       onSuccess();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -56,13 +53,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ open, on
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField label="Correo electrónico" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
           <InputField label="Nueva contraseña" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
-          <ul className="text-xs mb-2">
-            {passwordCriteria.map((c, i) => (
-              <li key={i} className={c.test(newPassword) ? 'text-green-600' : 'text-red-500'}>
-                {c.label}
-              </li>
-            ))}
-          </ul>
+          <PasswordCriteria password={newPassword} criteria={passwordCriteria} />
           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
           <div className="flex gap-2 mt-2">
             <Button type="button" variant="secondary" className="flex-1 !bg-[var(--gray-400)] !text-white" onClick={onClose}>Cancelar</Button>

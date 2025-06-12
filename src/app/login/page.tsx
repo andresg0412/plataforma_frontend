@@ -8,6 +8,7 @@ import { Input } from '../../components/atoms/Input';
 import { Label } from '../../components/atoms/Label';
 import { Spinner } from '../../components/atoms/Spinner';
 import { ResetPasswordModal } from '../../components/organisms/ResetPasswordModal';
+import { loginUser } from '../../auth/loginApi';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -23,13 +24,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const { token } = await res.json();
+      const { token } = await loginUser(email, password);
       login(token);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
