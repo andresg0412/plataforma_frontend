@@ -5,7 +5,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       const apiUrl = process.env.API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/users`);
+      // Obtener el token del header Authorization
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No autorizado: token faltante' });
+      }
+      const token = authHeader.replace('Bearer ', '');
+      const response = await fetch(`${apiUrl}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       if (!response.ok) throw new Error('Error al consultar la API externa');
       const data: ExternalUser[] = await response.json();
       // Mapear los datos externos al formato esperado por el frontend
