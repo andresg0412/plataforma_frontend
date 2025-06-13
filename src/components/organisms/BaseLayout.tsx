@@ -14,6 +14,7 @@ import Reports from '../dashboard/Reports';
 import Cashbox from '../dashboard/Cashbox';
 import Incomes from '../dashboard/Incomes';
 import Deductions from '../dashboard/Deductions';
+import Usuarios from '../dashboard/Usuarios';
 
 const COMPONENTS: Record<string, React.ReactNode> = {
   main: <MainPanel />,
@@ -25,6 +26,7 @@ const COMPONENTS: Record<string, React.ReactNode> = {
   cashbox: <Cashbox />,
   incomes: <Incomes />,
   deductions: <Deductions />,
+  usuarios: <Usuarios />,
 };
 
 const BaseLayout: React.FC = () => {
