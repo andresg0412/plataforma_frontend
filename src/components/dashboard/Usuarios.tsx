@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import UsersTable, { User } from './UsersTable';
+import UsersTable, { User as TableUser } from './UsersTable';
 import CreateUserButton from './CreateUserButton';
 import CreateUserModal from './CreateUserModal';
+import SuccessModal from './SuccessModal';
 import { getUsersApi } from '../../auth/getUsersApi';
+import { createUserApi } from '../../auth/createUserApi';
+
+type FormUser = { nombre: string; cedula: string; email: string; username: string; empresa: string; rol: string; estado?: string };
 
 const Usuarios: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<TableUser[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,18 +23,26 @@ const Usuarios: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCreate = (user: Omit<User, 'id'>) => {
-    setUsers(prev => [
-      { ...user, id: (Math.random() * 100000).toFixed(0) },
-      ...prev,
-    ]);
+  const handleCreate = async (user: FormUser) => {
+    try {
+      await createUserApi(user);
+      setUsers(prev => [
+        { ...user, id: (Math.random() * 100000).toFixed(0), estado: user.estado || 'activo' } as TableUser,
+        ...prev,
+      ]);
+      setSuccessMsg('Usuario creado exitosamente');
+      setSuccessOpen(true);
+      setModalOpen(false);
+    } catch (e) {
+      alert(e || 'Error al crear usuario');
+    }
   };
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user: TableUser) => {
     alert(`Editar usuario: ${user.nombre}`);
   };
 
-  const handleDelete = (user: User) => {
+  const handleDelete = (user: TableUser) => {
     if (window.confirm(`¿Seguro que deseas eliminar a ${user.nombre}?`)) {
       setUsers(prev => prev.filter(u => u.id !== user.id));
     }
@@ -48,6 +62,7 @@ const Usuarios: React.FC = () => {
         <UsersTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
       )}
       <CreateUserModal open={modalOpen} onClose={() => setModalOpen(false)} onCreate={handleCreate} />
+      <SuccessModal open={successOpen} message={successMsg} onClose={() => setSuccessOpen(false)} />
     </div>
   );
 };

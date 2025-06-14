@@ -4,6 +4,7 @@ export interface ExternalUser {
   email: string;
   id_roles: number;
   id_empresa: number | null;
+  username: string;
   creado_en: string;
   rol_name: string;
   empresa_nombre: string | null;

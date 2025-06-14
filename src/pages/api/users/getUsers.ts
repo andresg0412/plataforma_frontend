@@ -23,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const users = data.map((u: ExternalUser) => ({
         id: String(u.id_usuario),
         nombre: u.nombre,
+        username: u.username,
         email: u.email,
         rol: u.rol_name,
         empresa: u.empresa_nombre || 'Sin empresa',

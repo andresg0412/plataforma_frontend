@@ -4,6 +4,7 @@ import UserRow from './UserRow';
 export interface User {
   id: string;
   nombre: string;
+  username: string;
   email: string;
   rol: string;
   empresa: string;
@@ -23,6 +24,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
         <thead>
           <tr className="bg-gray-100 text-left">
             <th className="px-4 py-2">Nombre</th>
+            <th className="px-4 py-2">Username</th>
             <th className="px-4 py-2">Email</th>
             <th className="px-4 py-2">Rol</th>
             <th className="px-4 py-2">Empresa</th>
@@ -35,6 +37,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
             <UserRow
               key={user.id}
               nombre={user.nombre}
+              username={user.username}
               email={user.email}
               rol={user.rol}
               empresa={user.empresa}

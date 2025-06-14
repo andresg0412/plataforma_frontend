@@ -2,6 +2,7 @@ import React from 'react';
 
 interface UserRowProps {
   nombre: string;
+  username: string;
   email: string;
   rol: string;
   empresa: string;
@@ -10,10 +11,11 @@ interface UserRowProps {
   onDelete: () => void;
 }
 
-const UserRow: React.FC<UserRowProps> = ({ nombre, email, rol, empresa, estado, onEdit, onDelete }) => {
+const UserRow: React.FC<UserRowProps> = ({ nombre, username, email, rol, empresa, estado, onEdit, onDelete }) => {
   return (
     <tr className="border-b hover:bg-gray-50">
       <td className="px-4 py-2">{nombre}</td>
+      <td className="px-4 py-2">{username}</td>
       <td className="px-4 py-2">{email}</td>
       <td className="px-4 py-2">{rol}</td>
       <td className="px-4 py-2">{empresa}</td>
