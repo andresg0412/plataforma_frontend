@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import { companies, roles } from '../../lib/companiesAndRoles';
+import { companies } from '../../lib/companiesAndRoles';
+import CryptoJS from 'crypto-js';
+
+const roles = [
+  { value: 2, label: 'Empresa' },
+  { value: 3, label: 'Administrador' },
+  { value: 4, label: 'Propietario' },
+];
 
 interface CreateUserModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (user: { nombre: string; cedula: string; email: string; username: string; empresa: string; rol: string; estado?: string }) => Promise<void>;
+  onCreate: (user: { nombre: string; email: string; password_hash: string; id_roles: number; id_empresa: null; username: string }) => Promise<void>;
 }
 
-const initialForm = { nombre: '', cedula: '', email: '', username: '', empresa: '', rol: '', estado: 'activo' };
+const initialForm = { nombre: '', email: '', password: '', id_roles: '', id_empresa: '', username: '' };
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCreate }) => {
   const [form, setForm] = useState(initialForm);
@@ -17,12 +24,12 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
   const validate = () => {
     const newErrors: { [k: string]: string } = {};
     if (!form.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
-    if (!form.cedula.trim()) newErrors.cedula = 'La cédula es obligatoria';
     if (!form.email.trim()) newErrors.email = 'El correo es obligatorio';
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) newErrors.email = 'Correo inválido';
+    if (!form.password) newErrors.password = 'La contraseña es obligatoria';
     if (!form.username.trim()) newErrors.username = 'El username es obligatorio';
-    if (!form.empresa) newErrors.empresa = 'Selecciona una empresa';
-    if (!form.rol) newErrors.rol = 'Selecciona un rol';
+    else if (!/^[\w-]+$/.test(form.username)) newErrors.username = 'Solo letras, números, guiones y guiones bajos';
+    if (!form.id_roles) newErrors.id_roles = 'Selecciona un rol';
     return newErrors;
   };
 
@@ -37,7 +44,15 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
     setErrors(validation);
     if (Object.keys(validation).length > 0) return;
     setSubmitting(true);
-    await onCreate({ ...form, estado: form.estado || 'activo' });
+    const password_hash = CryptoJS.SHA256(form.password).toString();
+    await onCreate({
+      nombre: form.nombre,
+      email: form.email,
+      password_hash,
+      id_roles: Number(form.id_roles),
+      id_empresa: null,
+      username: form.username,
+    });
     setSubmitting(false);
     setForm(initialForm);
   };
@@ -55,30 +70,23 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
             {errors.nombre && <div className="text-red-500 text-xs mt-1">{errors.nombre}</div>}
           </div>
           <div>
-            <input name="cedula" value={form.cedula} onChange={handleChange} placeholder="Cédula" className="w-full border rounded px-3 py-2" />
-            {errors.cedula && <div className="text-red-500 text-xs mt-1">{errors.cedula}</div>}
-          </div>
-          <div>
             <input name="email" value={form.email} onChange={handleChange} placeholder="Correo electrónico" className="w-full border rounded px-3 py-2" type="email" />
             {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
+          </div>
+          <div>
+            <input name="password" value={form.password} onChange={handleChange} placeholder="Contraseña" className="w-full border rounded px-3 py-2" type="password" />
+            {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
           </div>
           <div>
             <input name="username" value={form.username} onChange={handleChange} placeholder="Username" className="w-full border rounded px-3 py-2" />
             {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
           </div>
           <div>
-            <select name="empresa" value={form.empresa} onChange={handleChange} className="w-full border rounded px-3 py-2">
-              <option value="">Selecciona empresa</option>
-              {companies.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-            {errors.empresa && <div className="text-red-500 text-xs mt-1">{errors.empresa}</div>}
-          </div>
-          <div>
-            <select name="rol" value={form.rol} onChange={handleChange} className="w-full border rounded px-3 py-2">
+            <select name="id_roles" value={form.id_roles} onChange={handleChange} className="w-full border rounded px-3 py-2">
               <option value="">Selecciona rol</option>
               {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
-            {errors.rol && <div className="text-red-500 text-xs mt-1">{errors.rol}</div>}
+            {errors.id_roles && <div className="text-red-500 text-xs mt-1">{errors.id_roles}</div>}
           </div>
           <div className="flex justify-end gap-2 mt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
