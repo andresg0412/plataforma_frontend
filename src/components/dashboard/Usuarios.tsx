@@ -7,6 +7,7 @@ import SuccessModal from './SuccessModal';
 import { getUsersApi } from '../../auth/getUsersApi';
 import { createUserApi } from '../../auth/createUserApi';
 import { deleteUserApi } from '../../auth/deleteUserApi';
+import { editUserApi } from '../../auth/editUserApi';
 
 type FormUser = { nombre: string; cedula: string; email: string; username: string; empresa: string; rol: string; estado?: string };
 
@@ -20,6 +21,11 @@ const Usuarios: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userToDelete, setUserToDelete] = useState<TableUser | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<TableUser | null>(null);
+  const [confirmEditOpen, setConfirmEditOpen] = useState(false);
+  const [editSuccessOpen, setEditSuccessOpen] = useState(false);
+  const [editMsg, setEditMsg] = useState('');
 
   useEffect(() => {
     getUsersApi()
@@ -54,7 +60,31 @@ const Usuarios: React.FC = () => {
   };
 
   const handleEdit = (user: TableUser) => {
-    alert(`Editar usuario: ${user.nombre}`);
+    setUserToEdit(user);
+    setEditModalOpen(true);
+  };
+
+  const handleEditUser = async (user: any) => {
+    setEditModalOpen(false);
+    setConfirmEditOpen(true);
+    setUserToEdit(prev => prev ? { ...prev, ...user } : null);
+  };
+
+  const handleConfirmEdit = async () => {
+    setConfirmEditOpen(false);
+    if (!userToEdit) return;
+    try {
+      const res = await editUserApi(userToEdit);
+      if (res.success) {
+        setEditMsg('Usuario editado exitosamente');
+        setUsers(prev => prev.map(u => u.id === userToEdit.id ? { ...u, ...userToEdit } : u));
+      } else {
+        setEditMsg(res.message || 'Error al editar usuario');
+      }
+    } catch (e) {
+      setEditMsg('Error al editar usuario');
+    }
+    setEditSuccessOpen(true);
   };
 
   const handleDelete = (user: TableUser) => {
@@ -97,6 +127,19 @@ const Usuarios: React.FC = () => {
         <UsersTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
       )}
       <CreateUserModal open={modalOpen} onClose={() => setModalOpen(false)} onCreate={handleCreate} />
+      <CreateUserModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onCreate={handleEditUser}
+        initialData={userToEdit || undefined}
+        isEdit
+      />
+      <ConfirmModal
+        open={confirmEditOpen}
+        message={`¿Estás seguro de que deseas editar el usuario ${userToEdit?.username || ''}?`}
+        onConfirm={handleConfirmEdit}
+        onClose={() => setConfirmEditOpen(false)}
+      />
       <ConfirmModal
         open={confirmOpen}
         message={`¿Estás seguro de que deseas eliminar el usuario ${userToDelete?.username || ''}?`}
@@ -104,6 +147,7 @@ const Usuarios: React.FC = () => {
         onClose={() => setConfirmOpen(false)}
       />
       <SuccessModal open={successOpen} message={errorDeleteMsg ? errorDeleteMsg : successMsg} onClose={() => { setSuccessOpen(false); setErrorDeleteMsg(''); }} />
+      <SuccessModal open={editSuccessOpen} message={editMsg} onClose={() => setEditSuccessOpen(false)} />
     </div>
   );
 };

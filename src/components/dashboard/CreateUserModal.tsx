@@ -12,21 +12,31 @@ interface CreateUserModalProps {
   open: boolean;
   onClose: () => void;
   onCreate: (user: { nombre: string; email: string; password_hash: string; id_roles: number; id_empresa: null; username: string }) => Promise<void>;
+  initialData?: Partial<typeof initialForm>;
+  isEdit?: boolean;
 }
 
 const initialForm = { nombre: '', email: '', password: '', id_roles: '', id_empresa: '', username: '' };
 
-const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCreate }) => {
+const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCreate, initialData, isEdit }) => {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [submitting, setSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    if (open && initialData) {
+      setForm({ ...initialForm, ...initialData, password: '' });
+    } else if (open) {
+      setForm(initialForm);
+    }
+  }, [open, initialData]);
 
   const validate = () => {
     const newErrors: { [k: string]: string } = {};
     if (!form.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
     if (!form.email.trim()) newErrors.email = 'El correo es obligatorio';
     else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) newErrors.email = 'Correo inválido';
-    if (!form.password) newErrors.password = 'La contraseña es obligatoria';
+    if (!isEdit && !form.password) newErrors.password = 'La contraseña es obligatoria';
     if (!form.username.trim()) newErrors.username = 'El username es obligatorio';
     else if (!/^[\w-]+$/.test(form.username)) newErrors.username = 'Solo letras, números, guiones y guiones bajos';
     if (!form.id_roles) newErrors.id_roles = 'Selecciona un rol';
@@ -63,14 +73,14 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
         <button className="absolute top-2 right-3 text-gray-500 text-xl" onClick={onClose}>&times;</button>
-        <h3 className="text-lg font-bold mb-4">Crear nuevo usuario</h3>
+        <h3 className="text-lg font-bold mb-4">{isEdit ? 'Editar usuario' : 'Crear nuevo usuario'}</h3>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" className="w-full border rounded px-3 py-2" />
             {errors.nombre && <div className="text-red-500 text-xs mt-1">{errors.nombre}</div>}
           </div>
           <div>
-            <input name="email" value={form.email} onChange={handleChange} placeholder="Correo electrónico" className="w-full border rounded px-3 py-2" type="email" />
+            <input name="email" value={form.email} onChange={handleChange} placeholder="Correo electrónico" className="w-full border rounded px-3 py-2" type="email" disabled={isEdit} />
             {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
           </div>
           <div>
@@ -78,7 +88,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
             {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
           </div>
           <div>
-            <input name="username" value={form.username} onChange={handleChange} placeholder="Username" className="w-full border rounded px-3 py-2" />
+            <input name="username" value={form.username} onChange={handleChange} placeholder="Username" className="w-full border rounded px-3 py-2" disabled={isEdit} />
             {errors.username && <div className="text-red-500 text-xs mt-1">{errors.username}</div>}
           </div>
           <div>
@@ -90,7 +100,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({ open, onClose, onCrea
           </div>
           <div className="flex justify-end gap-2 mt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-            <button type="submit" className="px-4 py-2 bg-tourism-teal text-white rounded hover:bg-tourism-navy" disabled={submitting}>{submitting ? 'Creando...' : 'Crear'}</button>
+            <button type="submit" className="px-4 py-2 bg-tourism-teal text-white rounded hover:bg-tourism-navy" disabled={submitting}>{submitting ? (isEdit ? 'Editando...' : 'Creando...') : (isEdit ? 'Editar' : 'Crear')}</button>
           </div>
         </form>
       </div>
