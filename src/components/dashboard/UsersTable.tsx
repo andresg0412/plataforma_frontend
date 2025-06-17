@@ -1,7 +1,7 @@
 import React from 'react';
 import UserRow from './UserRow';
 
-export interface User {
+export interface IDataUserIn {
   id: string;
   nombre: string;
   username: string;
@@ -12,9 +12,9 @@ export interface User {
 }
 
 interface UsersTableProps {
-  users: User[];
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
+  users: IDataUserIn[];
+  onEdit: (user: IDataUserIn) => void;
+  onDelete: (user: IDataUserIn) => void;
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {

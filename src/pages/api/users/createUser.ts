@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -7,16 +8,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!apiUrl) {
         return res.status(500).json({ success: false, message: 'API URL no configurada' });
       }
+      console.log(req.body);
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req.body),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        return res.status(response.status).json(data);
+      const apiData = await response.json();
+      if (apiData.isError) {
+        return res.status(apiData.code || 500).json({ success: false, message: apiData.message || 'Error al crear usuario' });
       }
-      return res.status(201).json(data);
+      return res.status(201).json({ success: true, message: 'Usuario creado exitosamente', data: apiData.data });
     } catch (error: any) {
       return res.status(500).json({ success: false, message: error.message || 'Error al crear usuario' });
     }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -19,12 +20,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await fetch(`${apiUrl}/users/${id}`, {
       method: 'DELETE',
     });
-    const data = await response.json();
-    if (response.ok && data.success) {
-      return res.status(200).json({ success: true, message: data.message || 'Usuario eliminado correctamente' });
-    } else {
-      return res.status(response.status).json({ success: false, message: data.message || 'Error eliminando usuario' });
+    const apiData = await response.json();
+    if (apiData.isError) {
+      return res.status(apiData.code || 500).json({ success: false, message: apiData.message || 'Error eliminando usuario' });
     }
+    return res.status(200).json({ success: true, message: 'Usuario eliminado correctamente', data: apiData.data });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error.message || 'Error eliminando usuario' });
   }

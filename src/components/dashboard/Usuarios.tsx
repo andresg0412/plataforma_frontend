@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import UsersTable, { User as TableUser } from './UsersTable';
+import UsersTable, { IDataUserIn as TableUser } from './UsersTable';
 import CreateUserButton from './CreateUserButton';
 import CreateUserModal from './CreateUserModal';
 import ConfirmModal from './ConfirmModal';
@@ -9,7 +11,15 @@ import { createUserApi } from '../../auth/createUserApi';
 import { deleteUserApi } from '../../auth/deleteUserApi';
 import { editUserApi } from '../../auth/editUserApi';
 
-type FormUser = { nombre: string; cedula: string; email: string; username: string; empresa: string; rol: string; estado?: string };
+type FormUser = {
+  nombre: string;
+  email: string;
+  password_hash: string;
+  username: string;
+  id_empresa: string;
+  id_roles: string;
+  estado?: string
+};
 
 const Usuarios: React.FC = () => {
   const [users, setUsers] = useState<TableUser[]>([]);
@@ -34,23 +44,32 @@ const Usuarios: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCreate = async (user: { nombre: string; email: string; password_hash: string; id_roles: number; id_empresa: null; username: string }) => {
+  const handleCreate = async (
+    user: {
+      nombre: string;
+      email: string;
+      password_hash: string;
+      id_roles: number;
+      id_empresa?: string | null;
+      username: string;
+      estado?: string;
+    }) => {
     try {
       // Map the modal user to your FormUser type for API and local state
-      const formUser: FormUser = {
-        nombre: user.nombre,
-        cedula: '', // Provide a way to get cedula if needed
-        email: user.email,
-        username: user.username,
-        empresa: '', // Provide a way to get empresa if needed
-        rol: '', // Provide a way to get rol if needed
-        estado: 'activo'
-      };
-      await createUserApi(formUser);
-      setUsers(prev => [
-        { ...formUser, id: (Math.random() * 100000).toFixed(0), estado: formUser.estado || 'activo' } as TableUser,
-        ...prev,
-      ]);
+      //const formUser: FormUser = {
+      //  nombre: user.nombre,
+      //  email: user.email,
+      //  password_hash: user.password_hash,
+      //  username: user.username,
+      //  id_empresa: '', // Provide a way to get empresa if needed
+      //  id_roles: '', // Provide a way to get rol if needed
+      //  estado: 'activo'
+      //};
+      await createUserApi(user);
+      //setUsers(prev => [
+      //  { ...formUser, id: (Math.random() * 100000).toFixed(0), estado: formUser.estado || 'activo' } as TableUser,
+      //  ...prev,
+      //]);
       setSuccessMsg('Usuario creado exitosamente');
       setSuccessOpen(true);
       setModalOpen(false);

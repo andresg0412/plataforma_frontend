@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { companies } from '../../lib/companiesAndRoles';
+//import { companies } from '../../lib/companiesAndRoles';
 import CryptoJS from 'crypto-js';
 
 const roles = [
