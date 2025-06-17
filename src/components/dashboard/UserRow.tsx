@@ -9,9 +9,10 @@ interface UserRowProps {
   estado: string;
   onEdit: () => void;
   onDelete: () => void;
+  canDelete: boolean;
 }
 
-const UserRow: React.FC<UserRowProps> = ({ nombre, username, email, rol, empresa, estado, onEdit, onDelete }) => {
+const UserRow: React.FC<UserRowProps> = ({ nombre, username, email, rol, empresa, estado, onEdit, onDelete, canDelete }) => {
   return (
     <tr className="border-b hover:bg-gray-50">
       <td className="px-4 py-2">{nombre}</td>
@@ -26,7 +27,13 @@ const UserRow: React.FC<UserRowProps> = ({ nombre, username, email, rol, empresa
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L7.5 19.79l-4 1 1-4 12.362-12.303Z" />
           </svg>
         </button>
-        <button onClick={onDelete} className="text-red-600 hover:text-red-800" title="Eliminar">
+        <button
+          onClick={canDelete ? onDelete : undefined}
+          className={`group ${canDelete ? 'text-red-600 hover:text-red-800' : 'text-gray-400'}`}
+          title={canDelete ? 'Eliminar' : ''}
+          disabled={!canDelete}
+          style={{ cursor: canDelete ? 'pointer' : 'default', background: 'none', border: 'none', padding: 0 }}
+        >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>

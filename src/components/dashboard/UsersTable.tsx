@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../../auth/AuthContext';
 import UserRow from './UserRow';
 
 export interface IDataUserIn {
@@ -18,6 +19,8 @@ interface UsersTableProps {
 }
 
 const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
+  const { user } = useAuth();
+  const canDelete = user?.permisos?.includes('eliminar_usuarios');
   return (
     <div className="overflow-x-auto rounded shadow border">
       <table className="min-w-full bg-white">
@@ -33,17 +36,18 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {users.map(userRow => (
             <UserRow
-              key={user.id}
-              nombre={user.nombre}
-              username={user.username}
-              email={user.email}
-              rol={user.rol}
-              empresa={user.empresa}
-              estado={user.estado}
-              onEdit={() => onEdit(user)}
-              onDelete={() => onDelete(user)}
+              key={userRow.id}
+              nombre={userRow.nombre}
+              username={userRow.username}
+              email={userRow.email}
+              rol={userRow.rol}
+              empresa={userRow.empresa}
+              estado={userRow.estado}
+              onEdit={() => onEdit(userRow)}
+              onDelete={() => onDelete(userRow)}
+              canDelete={!!canDelete}
             />
           ))}
         </tbody>
