@@ -24,7 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Mapear los datos externos al formato esperado por el frontend
       const users = (apiData.data || []).map((u: any) => ({
         id: String(u.id_usuario),
+        cedula: u.cedula,
         nombre: u.nombre,
+        apellido: u.apellido,
         username: u.username,
         email: u.email,
         rol: u.rol_name,

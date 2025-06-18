@@ -1,7 +1,9 @@
 import React from 'react';
 
 interface UserRowProps {
+  cedula: string;
   nombre: string;
+  apellido: string;
   username: string;
   email: string;
   rol: string;
@@ -12,10 +14,12 @@ interface UserRowProps {
   canDelete: boolean;
 }
 
-const UserRow: React.FC<UserRowProps> = ({ nombre, username, email, rol, empresa, estado, onEdit, onDelete, canDelete }) => {
+const UserRow: React.FC<UserRowProps> = ({ cedula, nombre, apellido, username, email, rol, empresa, estado, onEdit, onDelete, canDelete }) => {
   return (
     <tr className="border-b hover:bg-gray-50">
+      <td className="px-4 py-2">{cedula}</td>
       <td className="px-4 py-2">{nombre}</td>
+      <td className="px-4 py-2">{apellido}</td>
       <td className="px-4 py-2">{username}</td>
       <td className="px-4 py-2">{email}</td>
       <td className="px-4 py-2">{rol}</td>

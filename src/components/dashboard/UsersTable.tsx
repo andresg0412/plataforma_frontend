@@ -4,7 +4,9 @@ import UserRow from './UserRow';
 
 export interface IDataUserIn {
   id: string;
+  cedula: string;
   nombre: string;
+  apellido: string;
   username: string;
   email: string;
   rol: string;
@@ -26,7 +28,9 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
       <table className="min-w-full bg-white">
         <thead>
           <tr className="bg-gray-100 text-left">
+            <th className="px-4 py-2">Cédula</th>
             <th className="px-4 py-2">Nombre</th>
+            <th className="px-4 py-2">Apellido</th>
             <th className="px-4 py-2">Username</th>
             <th className="px-4 py-2">Email</th>
             <th className="px-4 py-2">Rol</th>
@@ -39,7 +43,9 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
           {users.map(userRow => (
             <UserRow
               key={userRow.id}
+              cedula={userRow.cedula}
               nombre={userRow.nombre}
+              apellido={userRow.apellido}
               username={userRow.username}
               email={userRow.email}
               rol={userRow.rol}
