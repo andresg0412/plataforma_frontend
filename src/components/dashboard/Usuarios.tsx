@@ -10,6 +10,7 @@ import { getUsersApi } from '../../auth/getUsersApi';
 import { createUserApi } from '../../auth/createUserApi';
 import { deleteUserApi } from '../../auth/deleteUserApi';
 import { editUserApi } from '../../auth/editUserApi';
+import { useAuth } from '../../auth/AuthContext';
 
 type FormUser = {
   nombre: string;
@@ -36,6 +37,8 @@ const Usuarios: React.FC = () => {
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
   const [editSuccessOpen, setEditSuccessOpen] = useState(false);
   const [editMsg, setEditMsg] = useState('');
+  const { user } = useAuth();
+  const canCreate = user?.permisos?.includes('crear_usuarios');
 
   useEffect(() => {
     getUsersApi()
@@ -46,7 +49,9 @@ const Usuarios: React.FC = () => {
 
   const handleCreate = async (
     user: {
+      cedula: string;
       nombre: string;
+      apellido: string;
       email: string;
       password_hash: string;
       id_roles: number;
@@ -136,7 +141,10 @@ const Usuarios: React.FC = () => {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Gestión de Usuarios</h2>
-        <CreateUserButton onClick={() => setModalOpen(true)} />
+        <CreateUserButton
+          onClick={() => canCreate && setModalOpen(true)}
+          disabled={!canCreate}
+        />
       </div>
       {loading ? (
         <div className="text-center py-8">Cargando usuarios...</div>

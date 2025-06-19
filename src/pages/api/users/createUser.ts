@@ -9,9 +9,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ success: false, message: 'API URL no configurada' });
       }
       console.log(req.body);
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No autorizado: token faltante' });
+      }
+      const token = authHeader.replace('Bearer ', '');
       const response = await fetch(`${apiUrl}/users`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(req.body),
       });
       const apiData = await response.json();
