@@ -2,8 +2,7 @@
 
 import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { jwtDecode } from 'jwt-decode';
-import type { User } from '../../../../libs/types';
+import type { User } from '../types/user';
 
 interface AuthContextProps {
   user: User | null;
@@ -26,7 +25,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (t) {
         setToken(t);
         try {
-          setUser(jwtDecode<User>(t));
+          // Parse base64 encoded token (our mock token)
+          const userData = JSON.parse(Buffer.from(t, 'base64').toString());
+          setUser(userData);
         } catch {
           setUser(null);
         }
@@ -38,7 +39,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (token) {
       try {
-        setUser(jwtDecode<User>(token));
+        // Parse base64 encoded token (our mock token)
+        const userData = JSON.parse(Buffer.from(token, 'base64').toString());
+        setUser(userData);
       } catch {
         setUser(null);
       }
@@ -52,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(t);
     router.push('/dashboard');
   };
+  
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
