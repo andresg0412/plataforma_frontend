@@ -1,10 +1,6 @@
 import React from 'react';
+import Inmuebles from './Inmuebles';
 
-const Properties: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold mb-2">Propiedades</h2>
-    <p>Listado y gestión de propiedades.</p>
-  </div>
-);
+const Properties: React.FC = () => <Inmuebles />;
 
 export default Properties;
