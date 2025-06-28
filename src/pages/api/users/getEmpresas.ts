@@ -23,7 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(apiData.code || 500).json({ success: false, message: apiData.message || 'Error al obtener empresas' });
     }
     return res.status(200).json({ success: true, data: apiData.data });
-  } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message || 'Error al obtener empresas' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error al obtener empresas';
+    return res.status(500).json({ success: false, message: errorMessage });
   }
 }
