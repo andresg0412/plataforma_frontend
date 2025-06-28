@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext'; // Asegúrate de que la ruta s
 const UserMenu: React.FC = () => {
   // Obtiene el usuario del contexto de autenticación
   const { user } = useAuth();
-  const userName = user?.nombre || 'Usuario';
+  const userName = user?.name || 'Usuario';
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium">{userName}</span>

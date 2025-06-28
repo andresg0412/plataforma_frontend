@@ -7,6 +7,8 @@ import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
 import { Label } from '../../components/atoms/Label';
 import { Spinner } from '../../components/atoms/Spinner';
+import { ResetPasswordModal } from '../../components/organisms/ResetPasswordModal';
+import { loginUser } from '../../auth/loginApi';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -14,19 +16,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const { token } = await res.json();
+      const { token } = await loginUser(email, password);
       login(token);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -133,6 +131,29 @@ export default function LoginPage() {
                 {error && <div className="text-red-500 text-center text-sm">{error}</div>}
                 <Button type="submit" className="w-full h-12 bg-tourism-navy hover:bg-tourism-navy/90 text-white font-medium">Entrar</Button>
               </form>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  className="text-tourism-teal hover:underline text-sm"
+                  onClick={() => setShowReset(true)}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              {resetSuccess && (
+                <div className="text-green-600 text-center text-sm mt-2">
+                  Contraseña restablecida correctamente. Ahora puedes iniciar sesión.
+                </div>
+              )}
+              <ResetPasswordModal
+                open={showReset}
+                onClose={() => setShowReset(false)}
+                onSuccess={() => {
+                  setShowReset(false);
+                  setResetSuccess(true);
+                  setTimeout(() => setResetSuccess(false), 5000);
+                }}
+              />
             </div>
           </div>
         </div>
