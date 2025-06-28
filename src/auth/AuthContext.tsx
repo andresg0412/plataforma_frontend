@@ -16,7 +16,7 @@ export interface User {
 interface AuthContextProps {
   user: User | null;
   token: string | null;
-  login: (token: string) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
 }
 
@@ -31,10 +31,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const t = localStorage.getItem('token');
+      const u = localStorage.getItem('user');
       if (t) {
         setToken(t);
         try {
-          setUser(jwtDecode<User>(t));
+          if (u) {
+            setUser(JSON.parse(u));
+          } else {
+            setUser(jwtDecode<User>(t));
+          }
         } catch {
           setUser(null);
         }
@@ -46,7 +51,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (token) {
       try {
-        setUser(jwtDecode<User>(token));
+        const u = localStorage.getItem('user');
+        if (u) {
+          setUser(JSON.parse(u));
+        } else {
+          setUser(jwtDecode<User>(token));
+        }
       } catch {
         setUser(null);
       }
@@ -55,14 +65,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
-  const login = (t: string) => {
+  const login = (t: string, u: User) => {
     localStorage.setItem('token', t);
+    localStorage.setItem('user', JSON.stringify(u));
     setToken(t);
+    setUser(u);
     router.push('/dashboard');
   };
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
+    setUser(null);
     router.push('/login');
   };
 

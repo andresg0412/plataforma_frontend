@@ -43,6 +43,7 @@ const PERMISO_MENU_MAP: Record<string, string> = {
   ver_caja: 'cashbox',
   ver_ingresos: 'incomes',
   ver_egresos: 'deductions',
+  ver_usuarios: 'usuarios',
   // Agrega más mapeos según tus claves de permisos
 };
 
@@ -54,17 +55,6 @@ interface SidebarMenuProps {
 const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeKey, onSelect }) => {
   const { user } = useAuth();
   const permisos = user?.permisos || [];
-  // Determina qué claves de menú mostrar según permisos
-  //interface User {
-  //  permisos: string[];
-  //  // Agrega más propiedades si es necesario
-  //}
-
-  //interface MenuItem {
-  //  key: string;
-  //  title: string;
-  //  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  //}
 
   const allowedKeys: Set<string> = new Set(
     (permisos as string[])
@@ -73,6 +63,11 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeKey, onSelect }) => {
   );
   // Siempre mostrar el panel principal
   allowedKeys.add('main');
+
+  const usuariosItem = { key: 'usuarios', title: 'Usuarios', icon: Users };
+
+  // Agregar la opción de Usuarios si el permiso existe
+  const showUsuarios = permisos.includes('ver_usuarios');
 
   return (
     <nav className="flex flex-col gap-2 p-0">
@@ -92,6 +87,19 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeKey, onSelect }) => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
+            {/* Opción Usuarios si corresponde */}
+            {showUsuarios && (
+              <SidebarMenuItem key={usuariosItem.key}>
+                <SidebarMenuButton
+                  className={`flex items-center gap-2 hover:bg-tourism-sage/10 hover:text-tourism-navy ${activeKey === usuariosItem.key ? 'bg-tourism-teal/10 text-tourism-navy border-r-2 border-tourism-teal' : ''}`}
+                  onClick={() => onSelect(usuariosItem.key)}
+                  data-active={activeKey === usuariosItem.key}
+                >
+                  <usuariosItem.icon className="h-4 w-4" />
+                  <span>{usuariosItem.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenuList>
         </SidebarGroupContent>
       </SidebarGroup>

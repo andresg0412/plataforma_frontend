@@ -24,8 +24,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token } = await loginUser(email, password);
-      login(token);
+      const { token, user } = await loginUser(email, password);
+      login(token, user);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

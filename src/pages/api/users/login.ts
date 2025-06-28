@@ -14,11 +14,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await apiRes.json();
-    if (!apiRes.ok) {
-      return res.status(apiRes.status).json(data);
+    const apiData = await apiRes.json();
+    if (apiData.isError) {
+      return res.status(apiData.code || 401).json({ message: apiData.message || 'Credenciales inválidas' });
     }
-    return res.status(200).json(data);
+    // Extraer token y user del nuevo formato
+    const { token, user } = apiData.data || {};
+    if (!token) {
+      return res.status(401).json({ message: 'Token no recibido' });
+    }
+    return res.status(200).json({ token, user });
   } catch (error) {
     return res.status(500).json({ message: 'Error en login' + error });
   }
