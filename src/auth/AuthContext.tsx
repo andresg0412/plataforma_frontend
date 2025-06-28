@@ -3,7 +3,16 @@
 import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
-import type { User } from '../../../../libs/types';
+
+// Local User type definition
+type User = {
+  id: string;
+  nombre: string;
+  email: string;
+  role?: string;
+  rol?: string;
+  permisos?: string[];
+};
 
 interface AuthContextProps {
   user: User | null;
