@@ -56,8 +56,8 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ open, on
           <PasswordCriteria password={newPassword} criteria={passwordCriteria} />
           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
           <div className="flex gap-2 mt-2">
-            <Button type="button" variant="secondary" className="flex-1 !bg-[var(--gray-400)] !text-white" onClick={onClose}>Cancelar</Button>
-            <Button type="submit" className="flex-1 !bg-[var(--primary)] !text-white" disabled={loading || !isValid}>{loading ? 'Enviando...' : 'Aceptar'}</Button>
+            <Button type="button" variant="secondary" className="flex-1 bg-gray-500 hover:bg-gray-700 text-white font-medium" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" className="flex-1 bg-tourism-navy hover:bg-tourism-navy/90 text-white font-medium" disabled={loading || !isValid}>{loading ? 'Enviando...' : 'Aceptar'}</Button>
           </div>
         </form>
       </div>

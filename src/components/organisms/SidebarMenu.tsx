@@ -55,16 +55,16 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({ activeKey, onSelect }) => {
   const { user } = useAuth();
   const permisos = user?.permisos || [];
   // Determina qué claves de menú mostrar según permisos
-  interface User {
-    permisos: string[];
-    // Agrega más propiedades si es necesario
-  }
+  //interface User {
+  //  permisos: string[];
+  //  // Agrega más propiedades si es necesario
+  //}
 
-  interface MenuItem {
-    key: string;
-    title: string;
-    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  }
+  //interface MenuItem {
+  //  key: string;
+  //  title: string;
+  //  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  //}
 
   const allowedKeys: Set<string> = new Set(
     (permisos as string[])
