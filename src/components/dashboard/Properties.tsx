@@ -50,7 +50,15 @@ const Properties: React.FC = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4 text-tourism-navy">Inmuebles</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-tourism-navy">Inmuebles</h2>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-3 py-1 text-sm bg-tourism-teal text-white rounded hover:bg-tourism-teal/80 transition-colors"
+        >
+          Actualizar
+        </button>
+      </div>
       
       {inmuebles.length === 0 ? (
         <div className="text-center py-8">
