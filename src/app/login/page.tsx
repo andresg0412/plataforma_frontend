@@ -24,8 +24,12 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const { token } = await loginUser(email, password);
-      login(token);
+      const response = await loginUser(email, password);
+      const { token, user } = response;
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+      login(token, user);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

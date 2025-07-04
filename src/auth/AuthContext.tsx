@@ -5,18 +5,21 @@ import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 // Define User type here if not available elsewhere
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  nombre: string;
   email: string;
+  id_roles: number;
+  role: string;
   permisos?: string[];
-  role?: string;
-  // Add other fields as needed
+  empresaId?: number | null;
+  propietarioId?: number | null;
+  inmuebles?: any[];
 }
 
 interface AuthContextProps {
   user: User | null;
   token: string | null;
-  login: (token: string) => void;
+  login: (token: string, userData?: User) => void;
   logout: () => void;
 }
 
@@ -31,12 +34,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const t = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
       if (t) {
         setToken(t);
-        try {
-          setUser(jwtDecode<User>(t));
-        } catch {
-          setUser(null);
+        
+        // Intentar usar el usuario guardado primero
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+          } catch (error) {
+            try {
+              const decoded = jwtDecode<User>(t);
+              setUser(decoded);
+            } catch (tokenError) {
+              setUser(null);
+            }
+          }
+        } else {
+          // Si no hay usuario guardado, intentar decodificar del token
+          try {
+            const decoded = jwtDecode<User>(t);
+            setUser(decoded);
+          } catch (error) {
+            setUser(null);
+          }
         }
       }
       setIsReady(true);
@@ -46,8 +69,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (token) {
       try {
-        setUser(jwtDecode<User>(token));
-      } catch {
+        const decoded = jwtDecode<User>(token);
+        setUser(decoded);
+      } catch (error) {
         setUser(null);
       }
     } else {
@@ -55,14 +79,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
-  const login = (t: string) => {
+  const login = (t: string, userData?: User) => {
     localStorage.setItem('token', t);
     setToken(t);
+    
+    // Si tenemos userData del servidor, usarlo directamente
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    }
     router.push('/dashboard');
   };
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
+    setUser(null);
     router.push('/login');
   };
 
