@@ -32,15 +32,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') {
       const t = localStorage.getItem('token');
       const u = localStorage.getItem('user');
-      if (t) {
+      
+      if (t && u) {
         setToken(t);
         try {
-          if (u) {
-            setUser(JSON.parse(u));
-          } else {
-            setUser(jwtDecode<User>(t));
-          }
-        } catch {
+          const parsedUser = JSON.parse(u);
+          setUser(parsedUser);
+        } catch (error) {
+          console.error('Error parsing user from localStorage:', error);
+          setUser(null);
+        }
+      } else if (t) {
+        setToken(t);
+        try {
+          const decodedUser = jwtDecode<User>(t);
+          setUser(decodedUser);
+        } catch (error) {
+          console.error('Error decoding token:', error);
           setUser(null);
         }
       }
@@ -48,22 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      try {
-        const u = localStorage.getItem('user');
-        if (u) {
-          setUser(JSON.parse(u));
-        } else {
-          setUser(jwtDecode<User>(token));
-        }
-      } catch {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
-  }, [token]);
+  // Removemos el segundo useEffect que puede estar causando el problema
 
   const login = (t: string, u: User) => {
     localStorage.setItem('token', t);
@@ -72,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(u);
     router.push('/dashboard');
   };
+  
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
