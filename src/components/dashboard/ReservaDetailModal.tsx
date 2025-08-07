@@ -103,20 +103,20 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
           <div className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
               <User className="h-5 w-5 text-tourism-teal" />
-              Información del Huésped
+              Información del Huésped Principal
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Nombre</label>
-                <p className="text-gray-900">{reserva.huesped_nombre}</p>
+                <p className="text-gray-900">{reserva.huesped_principal.nombre} {reserva.huesped_principal.apellido}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Email</label>
-                <p className="text-gray-900">{reserva.huesped_email}</p>
+                <p className="text-gray-900">{reserva.huesped_principal.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Teléfono</label>
-                <p className="text-gray-900">{reserva.huesped_telefono}</p>
+                <p className="text-gray-900">{reserva.huesped_principal.telefono}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Número de Huéspedes</label>
@@ -127,6 +127,53 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Lista de Todos los Huéspedes */}
+          {reserva.huespedes && reserva.huespedes.length > 0 && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Users className="h-5 w-5 text-tourism-teal" />
+                Todos los Huéspedes ({reserva.huespedes.length})
+              </h4>
+              <div className="space-y-3">
+                {reserva.huespedes.map((huesped, index) => (
+                  <div 
+                    key={huesped.id} 
+                    className={`p-3 rounded-md border ${
+                      huesped.es_principal 
+                        ? 'bg-blue-50 border-blue-200' 
+                        : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="font-medium text-gray-900">
+                        {huesped.nombre} {huesped.apellido}
+                        {huesped.es_principal && (
+                          <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            Principal
+                          </span>
+                        )}
+                      </h5>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Email:</span> 
+                        <span className="text-gray-900 ml-1">{huesped.email || 'No especificado'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Teléfono:</span> 
+                        <span className="text-gray-900 ml-1">{huesped.telefono || 'No especificado'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Documento:</span> 
+                        <span className="text-gray-900 ml-1">{huesped.documento_numero}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Información del Inmueble */}
           <div className="bg-gray-50 p-4 rounded-lg">

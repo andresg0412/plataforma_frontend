@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Eye } from 'lucide-react';
+import { Edit2, Trash2, Eye, Users } from 'lucide-react';
 import { IReservaTableData } from '../../interfaces/Reserva';
 
 interface ReservasTableProps {
@@ -7,6 +7,7 @@ interface ReservasTableProps {
   onEdit: (reserva: IReservaTableData) => void;
   onDelete: (reserva: IReservaTableData) => void;
   onViewDetail: (reserva: IReservaTableData) => void;
+  onViewHuespedes: (reserva: IReservaTableData) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -16,6 +17,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
   onEdit, 
   onDelete,
   onViewDetail,
+  onViewHuespedes,
   canEdit = true,
   canDelete = true
 }) => {
@@ -110,10 +112,10 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {reserva.huesped_nombre}
+                    {reserva.huesped_principal.nombre} {reserva.huesped_principal.apellido}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {reserva.huesped_email}
+                    {reserva.huesped_principal.email}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
@@ -131,8 +133,17 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 text-center">
-                    {reserva.numero_huespedes}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-900 font-medium">
+                      {reserva.numero_huespedes}
+                    </span>
+                    <button
+                      onClick={() => onViewHuespedes(reserva)}
+                      className="inline-flex items-center p-1 rounded-md text-tourism-teal hover:bg-tourism-teal/10 hover:text-tourism-teal transition-colors"
+                      title="Ver lista de huéspedes"
+                    >
+                      <Users className="h-4 w-4" />
+                    </button>
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">

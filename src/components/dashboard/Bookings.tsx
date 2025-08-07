@@ -4,10 +4,164 @@ import ReservasTable from './ReservasTable';
 import CreateReservaModal from './CreateReservaModal';
 import CreateReservaButton from './CreateReservaButton';
 import ReservaDetailModal from './ReservaDetailModal';
+import HuespedesListModal from './HuespedesListModal';
 import SuccessModal from './SuccessModal';
 import ConfirmModal from './ConfirmModal';
 import { useAuth } from '../../auth/AuthContext';
-import { IReservaForm, IReservaTableData } from '../../interfaces/Reserva';
+import { IReservaForm, IReservaTableData, IHuesped } from '../../interfaces/Reserva';
+
+// Data simulada para huéspedes
+const mockHuespedes: IHuesped[] = [
+  // Huéspedes para Reserva 1
+  {
+    id: 1,
+    nombre: 'María',
+    apellido: 'García',
+    email: 'maria.garcia@email.com',
+    telefono: '+57 300 123 4567',
+    documento_tipo: 'cedula',
+    documento_numero: '12345678',
+    fecha_nacimiento: '1985-03-15',
+    es_principal: true,
+    id_reserva: 1,
+  },
+  {
+    id: 2,
+    nombre: 'Pedro',
+    apellido: 'García',
+    email: 'pedro.garcia@email.com',
+    telefono: '+57 300 123 4568',
+    documento_tipo: 'cedula',
+    documento_numero: '87654321',
+    fecha_nacimiento: '1983-07-22',
+    es_principal: false,
+    id_reserva: 1,
+  },
+  // Huéspedes para Reserva 2
+  {
+    id: 3,
+    nombre: 'Juan Carlos',
+    apellido: 'Rodríguez',
+    email: 'juan.rodriguez@email.com',
+    telefono: '+57 310 987 6543',
+    documento_tipo: 'cedula',
+    documento_numero: '23456789',
+    fecha_nacimiento: '1978-11-10',
+    es_principal: true,
+    id_reserva: 2,
+  },
+  {
+    id: 4,
+    nombre: 'Carmen',
+    apellido: 'Rodríguez',
+    email: 'carmen.rodriguez@email.com',
+    telefono: '+57 310 987 6544',
+    documento_tipo: 'cedula',
+    documento_numero: '34567890',
+    fecha_nacimiento: '1980-05-18',
+    es_principal: false,
+    id_reserva: 2,
+  },
+  {
+    id: 5,
+    nombre: 'Sofia',
+    apellido: 'Rodríguez',
+    email: '',
+    telefono: '',
+    documento_tipo: 'cedula',
+    documento_numero: '45678901',
+    fecha_nacimiento: '2010-09-03',
+    es_principal: false,
+    id_reserva: 2,
+  },
+  {
+    id: 6,
+    nombre: 'Miguel',
+    apellido: 'Rodríguez',
+    email: '',
+    telefono: '',
+    documento_tipo: 'cedula',
+    documento_numero: '56789012',
+    fecha_nacimiento: '2012-12-25',
+    es_principal: false,
+    id_reserva: 2,
+  },
+  // Huéspedes para Reserva 3
+  {
+    id: 7,
+    nombre: 'Ana',
+    apellido: 'Martínez',
+    email: 'ana.martinez@email.com',
+    telefono: '+57 320 456 7890',
+    documento_tipo: 'pasaporte',
+    documento_numero: 'AB123456',
+    fecha_nacimiento: '1992-01-28',
+    es_principal: true,
+    id_reserva: 3,
+  },
+  // Huéspedes para Reserva 4
+  {
+    id: 8,
+    nombre: 'Carlos',
+    apellido: 'López',
+    email: 'carlos.lopez@email.com',
+    telefono: '+57 315 789 0123',
+    documento_tipo: 'cedula',
+    documento_numero: '67890123',
+    fecha_nacimiento: '1975-06-14',
+    es_principal: true,
+    id_reserva: 4,
+  },
+  {
+    id: 9,
+    nombre: 'Isabel',
+    apellido: 'López',
+    email: 'isabel.lopez@email.com',
+    telefono: '+57 315 789 0124',
+    documento_tipo: 'cedula',
+    documento_numero: '78901234',
+    fecha_nacimiento: '1977-09-20',
+    es_principal: false,
+    id_reserva: 4,
+  },
+  // Huéspedes para Reserva 5
+  {
+    id: 10,
+    nombre: 'Laura',
+    apellido: 'Fernández',
+    email: 'laura.fernandez@email.com',
+    telefono: '+57 318 555 0123',
+    documento_tipo: 'cedula',
+    documento_numero: '89012345',
+    fecha_nacimiento: '1988-04-12',
+    es_principal: true,
+    id_reserva: 5,
+  },
+  {
+    id: 11,
+    nombre: 'Roberto',
+    apellido: 'Fernández',
+    email: 'roberto.fernandez@email.com',
+    telefono: '+57 318 555 0124',
+    documento_tipo: 'cedula',
+    documento_numero: '90123456',
+    fecha_nacimiento: '1985-08-30',
+    es_principal: false,
+    id_reserva: 5,
+  },
+  {
+    id: 12,
+    nombre: 'Lucia',
+    apellido: 'Fernández',
+    email: '',
+    telefono: '',
+    documento_tipo: 'cedula',
+    documento_numero: '01234567',
+    fecha_nacimiento: '2015-02-14',
+    es_principal: false,
+    id_reserva: 5,
+  },
+];
 
 // Data simulada para reservas
 const mockReservas: IReservaTableData[] = [
@@ -16,12 +170,16 @@ const mockReservas: IReservaTableData[] = [
     codigo_reserva: 'RSV-2024-001',
     id_inmueble: 1,
     nombre_inmueble: 'Apartamento Centro Histórico',
-    huesped_nombre: 'María García',
-    huesped_email: 'maria.garcia@email.com',
-    huesped_telefono: '+57 300 123 4567',
+    huesped_principal: {
+      nombre: 'María',
+      apellido: 'García',
+      email: 'maria.garcia@email.com',
+      telefono: '+57 300 123 4567',
+    },
     fecha_entrada: '2024-08-15',
     fecha_salida: '2024-08-18',
     numero_huespedes: 2,
+    huespedes: mockHuespedes.filter(h => h.id_reserva === 1),
     precio_total: 450000,
     estado: 'confirmada',
     fecha_creacion: '2024-08-01',
@@ -33,12 +191,16 @@ const mockReservas: IReservaTableData[] = [
     codigo_reserva: 'RSV-2024-002',
     id_inmueble: 2,
     nombre_inmueble: 'Casa de Playa Cartagena',
-    huesped_nombre: 'Juan Carlos Rodríguez',
-    huesped_email: 'juan.rodriguez@email.com',
-    huesped_telefono: '+57 310 987 6543',
+    huesped_principal: {
+      nombre: 'Juan Carlos',
+      apellido: 'Rodríguez',
+      email: 'juan.rodriguez@email.com',
+      telefono: '+57 310 987 6543',
+    },
     fecha_entrada: '2024-08-20',
     fecha_salida: '2024-08-25',
     numero_huespedes: 4,
+    huespedes: mockHuespedes.filter(h => h.id_reserva === 2),
     precio_total: 1250000,
     estado: 'pendiente',
     fecha_creacion: '2024-08-05',
@@ -50,12 +212,16 @@ const mockReservas: IReservaTableData[] = [
     codigo_reserva: 'RSV-2024-003',
     id_inmueble: 3,
     nombre_inmueble: 'Loft Zona Rosa',
-    huesped_nombre: 'Ana Martínez',
-    huesped_email: 'ana.martinez@email.com',
-    huesped_telefono: '+57 320 456 7890',
+    huesped_principal: {
+      nombre: 'Ana',
+      apellido: 'Martínez',
+      email: 'ana.martinez@email.com',
+      telefono: '+57 320 456 7890',
+    },
     fecha_entrada: '2024-08-10',
     fecha_salida: '2024-08-12',
     numero_huespedes: 1,
+    huespedes: mockHuespedes.filter(h => h.id_reserva === 3),
     precio_total: 280000,
     estado: 'completada',
     fecha_creacion: '2024-07-25',
@@ -67,12 +233,16 @@ const mockReservas: IReservaTableData[] = [
     codigo_reserva: 'RSV-2024-004',
     id_inmueble: 4,
     nombre_inmueble: 'Estudio Chapinero',
-    huesped_nombre: 'Carlos López',
-    huesped_email: 'carlos.lopez@email.com',
-    huesped_telefono: '+57 315 789 0123',
+    huesped_principal: {
+      nombre: 'Carlos',
+      apellido: 'López',
+      email: 'carlos.lopez@email.com',
+      telefono: '+57 315 789 0123',
+    },
     fecha_entrada: '2024-08-12',
     fecha_salida: '2024-08-14',
     numero_huespedes: 2,
+    huespedes: mockHuespedes.filter(h => h.id_reserva === 4),
     precio_total: 320000,
     estado: 'en_proceso',
     fecha_creacion: '2024-08-02',
@@ -84,12 +254,16 @@ const mockReservas: IReservaTableData[] = [
     codigo_reserva: 'RSV-2024-005',
     id_inmueble: 1,
     nombre_inmueble: 'Apartamento Centro Histórico',
-    huesped_nombre: 'Laura Fernández',
-    huesped_email: 'laura.fernandez@email.com',
-    huesped_telefono: '+57 318 555 0123',
+    huesped_principal: {
+      nombre: 'Laura',
+      apellido: 'Fernández',
+      email: 'laura.fernandez@email.com',
+      telefono: '+57 318 555 0123',
+    },
     fecha_entrada: '2024-08-25',
     fecha_salida: '2024-08-27',
     numero_huespedes: 3,
+    huespedes: mockHuespedes.filter(h => h.id_reserva === 5),
     precio_total: 300000,
     estado: 'cancelada',
     fecha_creacion: '2024-08-03',
@@ -103,10 +277,12 @@ const Bookings: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [huespedesModalOpen, setHuespedesModalOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [reservaToEdit, setReservaToEdit] = useState<IReservaTableData | null>(null);
   const [reservaToDelete, setReservaToDelete] = useState<IReservaTableData | null>(null);
   const [reservaToView, setReservaToView] = useState<IReservaTableData | null>(null);
+  const [reservaToViewHuespedes, setReservaToViewHuespedes] = useState<IReservaTableData | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -151,12 +327,44 @@ const Bookings: React.FC = () => {
       
       const inmueble = inmuebles.find(i => i.id === reservaData.id_inmueble);
       
+      // Separar nombre y apellido del huésped
+      const nombreCompleto = reservaData.huesped_nombre.split(' ');
+      const nombre = nombreCompleto[0] || '';
+      const apellido = nombreCompleto.slice(1).join(' ') || '';
+      
       // Simular creación
       const newReserva: IReservaTableData = {
         id: Date.now(), // ID temporal
         codigo_reserva: generateReservaCode(),
         nombre_inmueble: inmueble?.nombre || 'Inmueble no encontrado',
-        ...reservaData,
+        huesped_principal: {
+          nombre: nombre,
+          apellido: apellido,
+          email: reservaData.huesped_email,
+          telefono: reservaData.huesped_telefono,
+        },
+        huespedes: [
+          {
+            id: Date.now(),
+            nombre: nombre,
+            apellido: apellido,
+            email: reservaData.huesped_email,
+            telefono: reservaData.huesped_telefono,
+            documento_tipo: 'cedula',
+            documento_numero: '00000000',
+            fecha_nacimiento: '1990-01-01',
+            es_principal: true,
+            id_reserva: Date.now(),
+          }
+        ],
+        id_inmueble: reservaData.id_inmueble,
+        fecha_entrada: reservaData.fecha_entrada,
+        fecha_salida: reservaData.fecha_salida,
+        numero_huespedes: reservaData.numero_huespedes,
+        precio_total: reservaData.precio_total,
+        estado: reservaData.estado,
+        observaciones: reservaData.observaciones,
+        id_empresa: reservaData.id_empresa,
         fecha_creacion: new Date().toISOString().split('T')[0],
       };
       
@@ -189,13 +397,30 @@ const Bookings: React.FC = () => {
       
       const inmueble = inmuebles.find(i => i.id === reservaData.id_inmueble);
       
+      // Separar nombre y apellido del huésped
+      const nombreCompleto = reservaData.huesped_nombre.split(' ');
+      const nombre = nombreCompleto[0] || '';
+      const apellido = nombreCompleto.slice(1).join(' ') || '';
+      
       // Simular edición
       setReservas(prev => prev.map(reserva => 
         reserva.id === reservaToEdit.id 
           ? { 
               ...reserva, 
-              ...reservaData,
-              nombre_inmueble: inmueble?.nombre || reserva.nombre_inmueble
+              id_inmueble: reservaData.id_inmueble,
+              nombre_inmueble: inmueble?.nombre || reserva.nombre_inmueble,
+              huesped_principal: {
+                nombre: nombre,
+                apellido: apellido,
+                email: reservaData.huesped_email,
+                telefono: reservaData.huesped_telefono,
+              },
+              fecha_entrada: reservaData.fecha_entrada,
+              fecha_salida: reservaData.fecha_salida,
+              numero_huespedes: reservaData.numero_huespedes,
+              precio_total: reservaData.precio_total,
+              estado: reservaData.estado,
+              observaciones: reservaData.observaciones,
             }
           : reserva
       ));
@@ -237,6 +462,11 @@ const Bookings: React.FC = () => {
     setDetailModalOpen(true);
   };
 
+  const handleViewHuespedes = (reserva: IReservaTableData) => {
+    setReservaToViewHuespedes(reserva);
+    setHuespedesModalOpen(true);
+  };
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -256,6 +486,7 @@ const Bookings: React.FC = () => {
           onEdit={handleEdit} 
           onDelete={handleDelete}
           onViewDetail={handleViewDetail}
+          onViewHuespedes={handleViewHuespedes}
           canEdit={canEdit}
           canDelete={canDelete}
         />
@@ -276,9 +507,9 @@ const Bookings: React.FC = () => {
         onCreate={handleEditSubmit}
         initialData={reservaToEdit ? {
           id_inmueble: reservaToEdit.id_inmueble,
-          huesped_nombre: reservaToEdit.huesped_nombre,
-          huesped_email: reservaToEdit.huesped_email,
-          huesped_telefono: reservaToEdit.huesped_telefono,
+          huesped_nombre: reservaToEdit.huesped_principal.nombre + ' ' + reservaToEdit.huesped_principal.apellido,
+          huesped_email: reservaToEdit.huesped_principal.email,
+          huesped_telefono: reservaToEdit.huesped_principal.telefono,
           fecha_entrada: reservaToEdit.fecha_entrada,
           fecha_salida: reservaToEdit.fecha_salida,
           numero_huespedes: reservaToEdit.numero_huespedes,
@@ -297,6 +528,16 @@ const Bookings: React.FC = () => {
           setReservaToView(null);
         }}
         reserva={reservaToView}
+      />
+
+      <HuespedesListModal
+        open={huespedesModalOpen}
+        onClose={() => {
+          setHuespedesModalOpen(false);
+          setReservaToViewHuespedes(null);
+        }}
+        huespedes={reservaToViewHuespedes?.huespedes || []}
+        codigoReserva={reservaToViewHuespedes?.codigo_reserva || ''}
       />
       
       <ConfirmModal
