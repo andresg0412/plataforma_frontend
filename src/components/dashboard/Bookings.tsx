@@ -1,10 +1,321 @@
-import React from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState, useEffect } from 'react';
+import ReservasTable from './ReservasTable';
+import CreateReservaModal from './CreateReservaModal';
+import CreateReservaButton from './CreateReservaButton';
+import ReservaDetailModal from './ReservaDetailModal';
+import SuccessModal from './SuccessModal';
+import ConfirmModal from './ConfirmModal';
+import { useAuth } from '../../auth/AuthContext';
+import { IReservaForm, IReservaTableData } from '../../interfaces/Reserva';
 
-const Bookings: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold mb-2">Reservas</h2>
-    <p>Aquí puedes ver y gestionar las reservas.</p>
-  </div>
-);
+// Data simulada para reservas
+const mockReservas: IReservaTableData[] = [
+  {
+    id: 1,
+    codigo_reserva: 'RSV-2024-001',
+    id_inmueble: 1,
+    nombre_inmueble: 'Apartamento Centro Histórico',
+    huesped_nombre: 'María García',
+    huesped_email: 'maria.garcia@email.com',
+    huesped_telefono: '+57 300 123 4567',
+    fecha_entrada: '2024-08-15',
+    fecha_salida: '2024-08-18',
+    numero_huespedes: 2,
+    precio_total: 450000,
+    estado: 'confirmada',
+    fecha_creacion: '2024-08-01',
+    observaciones: 'Llegada tarde, después de las 18:00',
+    id_empresa: 1,
+  },
+  {
+    id: 2,
+    codigo_reserva: 'RSV-2024-002',
+    id_inmueble: 2,
+    nombre_inmueble: 'Casa de Playa Cartagena',
+    huesped_nombre: 'Juan Carlos Rodríguez',
+    huesped_email: 'juan.rodriguez@email.com',
+    huesped_telefono: '+57 310 987 6543',
+    fecha_entrada: '2024-08-20',
+    fecha_salida: '2024-08-25',
+    numero_huespedes: 4,
+    precio_total: 1250000,
+    estado: 'pendiente',
+    fecha_creacion: '2024-08-05',
+    observaciones: '',
+    id_empresa: 1,
+  },
+  {
+    id: 3,
+    codigo_reserva: 'RSV-2024-003',
+    id_inmueble: 3,
+    nombre_inmueble: 'Loft Zona Rosa',
+    huesped_nombre: 'Ana Martínez',
+    huesped_email: 'ana.martinez@email.com',
+    huesped_telefono: '+57 320 456 7890',
+    fecha_entrada: '2024-08-10',
+    fecha_salida: '2024-08-12',
+    numero_huespedes: 1,
+    precio_total: 280000,
+    estado: 'completada',
+    fecha_creacion: '2024-07-25',
+    observaciones: 'Cliente frecuente',
+    id_empresa: 1,
+  },
+  {
+    id: 4,
+    codigo_reserva: 'RSV-2024-004',
+    id_inmueble: 4,
+    nombre_inmueble: 'Estudio Chapinero',
+    huesped_nombre: 'Carlos López',
+    huesped_email: 'carlos.lopez@email.com',
+    huesped_telefono: '+57 315 789 0123',
+    fecha_entrada: '2024-08-12',
+    fecha_salida: '2024-08-14',
+    numero_huespedes: 2,
+    precio_total: 320000,
+    estado: 'en_proceso',
+    fecha_creacion: '2024-08-02',
+    observaciones: 'Necesita cuna para bebé',
+    id_empresa: 1,
+  },
+  {
+    id: 5,
+    codigo_reserva: 'RSV-2024-005',
+    id_inmueble: 1,
+    nombre_inmueble: 'Apartamento Centro Histórico',
+    huesped_nombre: 'Laura Fernández',
+    huesped_email: 'laura.fernandez@email.com',
+    huesped_telefono: '+57 318 555 0123',
+    fecha_entrada: '2024-08-25',
+    fecha_salida: '2024-08-27',
+    numero_huespedes: 3,
+    precio_total: 300000,
+    estado: 'cancelada',
+    fecha_creacion: '2024-08-03',
+    observaciones: 'Cancelada por el cliente',
+    id_empresa: 1,
+  },
+];
+
+const Bookings: React.FC = () => {
+  const [reservas, setReservas] = useState<IReservaTableData[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [reservaToEdit, setReservaToEdit] = useState<IReservaTableData | null>(null);
+  const [reservaToDelete, setReservaToDelete] = useState<IReservaTableData | null>(null);
+  const [reservaToView, setReservaToView] = useState<IReservaTableData | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { user } = useAuth();
+  const canCreate = user?.permisos?.includes('crear_reservas') || true; // TEMPORAL: siempre true para debugging
+  const canEdit = user?.permisos?.includes('editar_reservas') || true; // TEMPORAL: siempre true para debugging
+  const canDelete = user?.permisos?.includes('eliminar_reservas') || true; // TEMPORAL: siempre true para debugging
+
+  console.log('=== RESERVAS DEBUG ===');
+  console.log('user:', user);
+  console.log('user permisos:', user?.permisos);
+  console.log('canCreate:', canCreate);
+  console.log('canEdit:', canEdit);
+  console.log('canDelete:', canDelete);
+  console.log('========================');
+
+  useEffect(() => {
+    // Simular carga de datos
+    setTimeout(() => {
+      setReservas(mockReservas);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const generateReservaCode = () => {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `RSV-${year}-${randomNum}`;
+  };
+
+  const handleCreate = async (reservaData: IReservaForm) => {
+    try {
+      // Encontrar el nombre del inmueble
+      const inmuebles = [
+        { id: 1, nombre: 'Apartamento Centro Histórico' },
+        { id: 2, nombre: 'Casa de Playa Cartagena' },
+        { id: 3, nombre: 'Loft Zona Rosa' },
+        { id: 4, nombre: 'Estudio Chapinero' },
+      ];
+      
+      const inmueble = inmuebles.find(i => i.id === reservaData.id_inmueble);
+      
+      // Simular creación
+      const newReserva: IReservaTableData = {
+        id: Date.now(), // ID temporal
+        codigo_reserva: generateReservaCode(),
+        nombre_inmueble: inmueble?.nombre || 'Inmueble no encontrado',
+        ...reservaData,
+        fecha_creacion: new Date().toISOString().split('T')[0],
+      };
+      
+      setReservas(prev => [...prev, newReserva]);
+      setSuccessMsg('Reserva creada exitosamente');
+      setSuccessOpen(true);
+      setModalOpen(false);
+    } catch (e) {
+      alert(e || 'Error al crear reserva');
+    }
+  };
+
+  const handleEdit = (reserva: IReservaTableData) => {
+    if (!canEdit) return;
+    setReservaToEdit(reserva);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (reservaData: IReservaForm) => {
+    if (!reservaToEdit) return;
+    
+    try {
+      // Encontrar el nombre del inmueble
+      const inmuebles = [
+        { id: 1, nombre: 'Apartamento Centro Histórico' },
+        { id: 2, nombre: 'Casa de Playa Cartagena' },
+        { id: 3, nombre: 'Loft Zona Rosa' },
+        { id: 4, nombre: 'Estudio Chapinero' },
+      ];
+      
+      const inmueble = inmuebles.find(i => i.id === reservaData.id_inmueble);
+      
+      // Simular edición
+      setReservas(prev => prev.map(reserva => 
+        reserva.id === reservaToEdit.id 
+          ? { 
+              ...reserva, 
+              ...reservaData,
+              nombre_inmueble: inmueble?.nombre || reserva.nombre_inmueble
+            }
+          : reserva
+      ));
+      
+      setSuccessMsg('Reserva actualizada exitosamente');
+      setSuccessOpen(true);
+      setEditModalOpen(false);
+      setReservaToEdit(null);
+    } catch (e) {
+      alert(e || 'Error al actualizar reserva');
+    }
+  };
+
+  const handleDelete = (reserva: IReservaTableData) => {
+    if (!canDelete) return;
+    setReservaToDelete(reserva);
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!reservaToDelete) return;
+    setConfirmDeleteOpen(false);
+    
+    try {
+      // Simular eliminación
+      setReservas(prev => prev.filter(reserva => reserva.id !== reservaToDelete.id));
+      setSuccessMsg('Reserva eliminada exitosamente');
+      setSuccessOpen(true);
+    } catch (e) {
+      setSuccessMsg('Error eliminando reserva');
+      setSuccessOpen(true);
+    }
+    
+    setReservaToDelete(null);
+  };
+
+  const handleViewDetail = (reserva: IReservaTableData) => {
+    setReservaToView(reserva);
+    setDetailModalOpen(true);
+  };
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Gestión de Reservas</h2>
+        <CreateReservaButton
+          onClick={() => canCreate && setModalOpen(true)}
+          disabled={!canCreate}
+        />
+      </div>
+      {loading ? (
+        <div className="text-center py-8">Cargando reservas...</div>
+      ) : error ? (
+        <div className="text-red-500">{error}</div>
+      ) : (
+        <ReservasTable 
+          reservas={reservas} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete}
+          onViewDetail={handleViewDetail}
+          canEdit={canEdit}
+          canDelete={canDelete}
+        />
+      )}
+      
+      <CreateReservaModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        onCreate={handleCreate} 
+      />
+      
+      <CreateReservaModal 
+        open={editModalOpen} 
+        onClose={() => {
+          setEditModalOpen(false);
+          setReservaToEdit(null);
+        }} 
+        onCreate={handleEditSubmit}
+        initialData={reservaToEdit ? {
+          id_inmueble: reservaToEdit.id_inmueble,
+          huesped_nombre: reservaToEdit.huesped_nombre,
+          huesped_email: reservaToEdit.huesped_email,
+          huesped_telefono: reservaToEdit.huesped_telefono,
+          fecha_entrada: reservaToEdit.fecha_entrada,
+          fecha_salida: reservaToEdit.fecha_salida,
+          numero_huespedes: reservaToEdit.numero_huespedes,
+          precio_total: reservaToEdit.precio_total,
+          estado: reservaToEdit.estado,
+          observaciones: reservaToEdit.observaciones || '',
+          id_empresa: reservaToEdit.id_empresa
+        } : undefined}
+        isEdit={true}
+      />
+
+      <ReservaDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setReservaToView(null);
+        }}
+        reserva={reservaToView}
+      />
+      
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        message={`¿Estás seguro de que deseas eliminar la reserva "${reservaToDelete?.codigo_reserva || ''}"?`}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setConfirmDeleteOpen(false);
+          setReservaToDelete(null);
+        }}
+      />
+      
+      <SuccessModal 
+        open={successOpen} 
+        message={successMsg} 
+        onClose={() => setSuccessOpen(false)} 
+      />
+    </div>
+  );
+};
 
 export default Bookings;

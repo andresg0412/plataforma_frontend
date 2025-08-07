@@ -7,6 +7,7 @@ import {
   BarChart3,
   CreditCard,
   FileText,
+  UserCheck,
 } from 'lucide-react';
 import {
   SidebarGroup,
@@ -21,7 +22,8 @@ import { useAuth } from '../../auth/AuthContext';
 const menuItems = [
   { key: 'main', title: 'Panel Principal', icon: Home },
   { key: 'bookings', title: 'Reservas', icon: Calendar },
-  { key: 'properties', title: 'Propiedades', icon: Building2 },
+  { key: 'properties', title: 'Inmuebles', icon: Building2 },
+  { key: 'propietarios', title: 'Propietarios', icon: UserCheck },
   { key: 'guests', title: 'Huéspedes', icon: Users },
   { key: 'availability', title: 'Disponibilidad', icon: FileText },
 ];
@@ -36,6 +38,8 @@ const analyticsItems = [
 // Mapeo de permisos a claves de menú
 const PERMISO_MENU_MAP: Record<string, string> = {
   ver_inmuebles: 'properties',
+  ver_propietarios: 'propietarios',
+  ver_reservas: 'bookings',
   crear_reserva: 'bookings',
   ver_reportes: 'reports',
   ver_huespedes: 'guests',

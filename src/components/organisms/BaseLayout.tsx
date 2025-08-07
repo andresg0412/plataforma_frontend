@@ -8,6 +8,7 @@ import SidebarMenu from '../organisms/SidebarMenu';
 import MainPanel from '../dashboard/MainPanel';
 import Bookings from '../dashboard/Bookings';
 import Properties from '../dashboard/Properties';
+import Propietarios from '../dashboard/Propietarios';
 import Guests from '../dashboard/Guests';
 import Availability from '../dashboard/Availability';
 import Reports from '../dashboard/Reports';
@@ -20,6 +21,7 @@ const COMPONENTS: Record<string, React.ReactNode> = {
   main: <MainPanel />,
   bookings: <Bookings />,
   properties: <Properties />,
+  propietarios: <Propietarios />,
   guests: <Guests />,
   availability: <Availability />,
   reports: <Reports />,

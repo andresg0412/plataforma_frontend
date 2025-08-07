@@ -1,0 +1,36 @@
+export interface IPropietario {
+  id: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  cedula: string;
+  fecha_registro: string;
+  estado: 'activo' | 'inactivo';
+  id_empresa: number;
+}
+
+export interface IPropietarioForm {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  cedula: string;
+  estado: 'activo' | 'inactivo';
+  id_empresa: number;
+}
+
+export interface IPropietarioTableData {
+  id: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  cedula: string;
+  fecha_registro: string;
+  estado: 'activo' | 'inactivo';
+  id_empresa: number;
+}
