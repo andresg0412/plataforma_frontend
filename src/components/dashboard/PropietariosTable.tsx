@@ -1,11 +1,13 @@
 import React from 'react';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye } from 'lucide-react';
 import { IPropietarioTableData } from '../../interfaces/Propietario';
 
 interface PropietariosTableProps {
   propietarios: IPropietarioTableData[];
   onEdit: (propietario: IPropietarioTableData) => void;
   onDelete: (propietario: IPropietarioTableData) => void;
+  onViewDetail: (propietario: IPropietarioTableData) => void;
+  onInmuebleClick: (inmuebleId: string) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -14,21 +16,30 @@ const PropietariosTable: React.FC<PropietariosTableProps> = ({
   propietarios, 
   onEdit, 
   onDelete,
+  onViewDetail,
+  onInmuebleClick,
   canEdit = true,
   canDelete = true
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES');
-  };
-
-  const getEstadoBadge = (estado: 'activo' | 'inactivo') => {
-    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-    
-    if (estado === 'activo') {
-      return `${baseClasses} bg-green-100 text-green-800`;
+  const renderInmuebles = (inmuebles?: string[]) => {
+    if (!inmuebles || inmuebles.length === 0) {
+      return <span className="text-gray-400 text-sm">Sin inmuebles</span>;
     }
-    return `${baseClasses} bg-red-100 text-red-800`;
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {inmuebles.map((inmuebleId) => (
+          <button
+            key={inmuebleId}
+            onClick={() => onInmuebleClick(inmuebleId)}
+            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer"
+            title="Ver detalle del inmueble"
+          >
+            {inmuebleId}
+          </button>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -49,13 +60,7 @@ const PropietariosTable: React.FC<PropietariosTableProps> = ({
               Teléfono
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Dirección
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Estado
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Fecha Registro
+              Inmuebles
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Acciones
@@ -65,7 +70,7 @@ const PropietariosTable: React.FC<PropietariosTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {propietarios.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                 No hay propietarios registrados
               </td>
             </tr>
@@ -86,21 +91,18 @@ const PropietariosTable: React.FC<PropietariosTableProps> = ({
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{propietario.telefono}</div>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 max-w-xs truncate" title={propietario.direccion}>
-                    {propietario.direccion}
-                  </div>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <span className={getEstadoBadge(propietario.estado)}>
-                    {propietario.estado}
-                  </span>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{formatDate(propietario.fecha_registro)}</div>
+                <td className="px-4 py-4">
+                  {renderInmuebles(propietario.inmuebles)}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
+                    <button
+                      onClick={() => onViewDetail(propietario)}
+                      className="inline-flex items-center p-2 rounded-md text-green-600 hover:bg-green-50 hover:text-green-800 transition-colors"
+                      title="Ver detalle del propietario"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => onEdit(propietario)}
                       disabled={!canEdit}

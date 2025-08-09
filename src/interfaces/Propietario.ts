@@ -33,4 +33,5 @@ export interface IPropietarioTableData {
   fecha_registro: string;
   estado: 'activo' | 'inactivo';
   id_empresa: number;
+  inmuebles?: string[]; // IDs de los inmuebles que posee
 }
