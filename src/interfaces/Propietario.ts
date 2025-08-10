@@ -22,6 +22,17 @@ export interface IPropietarioForm {
   id_empresa: number;
 }
 
+// Interface para campos editables (sin cedula y username)
+export interface IPropietarioEditableFields {
+  nombre?: string;
+  apellido?: string;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
+  estado?: 'activo' | 'inactivo';
+  id_empresa?: number;
+}
+
 export interface IPropietarioTableData {
   id: number;
   nombre: string;

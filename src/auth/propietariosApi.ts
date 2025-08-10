@@ -1,5 +1,5 @@
 import { apiFetch } from './apiFetch';
-import { IPropietarioTableData } from '../interfaces/Propietario';
+import { IPropietarioTableData, IPropietarioEditableFields } from '../interfaces/Propietario';
 
 // Obtener todos los propietarios
 export const getPropietariosApi = async (id_empresa?: number): Promise<IPropietarioTableData[]> => {
@@ -45,15 +45,28 @@ export const createPropietarioApi = async (propietarioData: any): Promise<IPropi
   }
 };
 
-// Actualizar propietario
+// Actualizar propietario (solo campos editables)
 export const editPropietarioApi = async (id: number, propietarioData: any): Promise<IPropietarioTableData> => {
   try {
+    // Filtrar solo los campos editables
+    const editableFields: IPropietarioEditableFields = {};
+    
+    if (propietarioData.nombre !== undefined) editableFields.nombre = propietarioData.nombre;
+    if (propietarioData.apellido !== undefined) editableFields.apellido = propietarioData.apellido;
+    if (propietarioData.email !== undefined) editableFields.email = propietarioData.email;
+    if (propietarioData.telefono !== undefined) editableFields.telefono = propietarioData.telefono;
+    if (propietarioData.direccion !== undefined) editableFields.direccion = propietarioData.direccion;
+    if (propietarioData.estado !== undefined) editableFields.estado = propietarioData.estado;
+    if (propietarioData.id_empresa !== undefined) editableFields.id_empresa = propietarioData.id_empresa;
+
+    console.log('Sending editable fields:', editableFields);
+
     const response = await apiFetch(`/api/propietarios/editPropietario?id=${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(propietarioData),
+      body: JSON.stringify(editableFields),
     });
 
     if (response.isError) {

@@ -76,7 +76,8 @@ const CreatePropietarioModal: React.FC<CreatePropietarioModalProps> = ({
       newErrors.direccion = 'La dirección es requerida';
     }
 
-    if (!formData.cedula.trim()) {
+    // Solo validar cédula si no es modo edición
+    if (!isEdit && !formData.cedula.trim()) {
       newErrors.cedula = 'La cédula es requerida';
     }
 
@@ -157,14 +158,16 @@ const CreatePropietarioModal: React.FC<CreatePropietarioModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Cédula *
+              {isEdit && <span className="text-xs text-gray-500 ml-1">(No editable)</span>}
             </label>
             <input
               type="text"
               value={formData.cedula}
               onChange={(e) => handleInputChange('cedula', e.target.value)}
+              disabled={isEdit}
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
                 errors.cedula ? 'border-red-300' : 'border-gray-300'
-              }`}
+              } ${isEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
               placeholder="Número de cédula"
             />
             {errors.cedula && (
