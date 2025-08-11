@@ -1,24 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import InmueblesTable, { IDataInmuebleIn as TableInmueble } from './InmueblesTable';
+import InmuebleDetailModal from './InmuebleDetailModal';
 import CreateInmuebleModal from './CreateInmuebleModal';
 import CreatePropertyButton from './CreatePropertyButton';
 import SuccessModal from './SuccessModal';
 import ConfirmModal from './ConfirmModal';
 import { getInmueblesApi } from '../../auth/getInmueblesApi';
+import { getInmuebleDetalleApi } from '../../auth/getInmuebleDetalleApi';
 import { createInmuebleApi } from '../../auth/createInmuebleApi';
 import { editInmuebleApi } from '../../auth/editInmuebleApi';
 import { deleteInmuebleApi } from '../../auth/deleteInmuebleApi';
 import { useAuth } from '../../auth/AuthContext';
-import { IInmuebleForm } from '../../interfaces/Inmueble';
+import { IInmuebleForm, IInmueble } from '../../interfaces/Inmueble';
 
 const Properties: React.FC = () => {
   const [inmuebles, setInmuebles] = useState<TableInmueble[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [inmuebleToEdit, setInmuebleToEdit] = useState<TableInmueble | null>(null);
   const [inmuebleToDelete, setInmuebleToDelete] = useState<TableInmueble | null>(null);
+  const [inmuebleToView, setInmuebleToView] = useState<IInmueble | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -61,6 +65,26 @@ const Properties: React.FC = () => {
     if (!canEdit) return;
     setInmuebleToEdit(inmueble);
     setEditModalOpen(true);
+  };
+
+  const handleViewDetail = (inmueble: TableInmueble) => {
+    handleViewDetailWithApi(inmueble.id);
+  };
+
+  const handleViewDetailWithApi = async (inmuebleId: string) => {
+    try {
+      console.log('🔍 Fetching inmueble detail for ID:', inmuebleId);
+      
+      // Obtener detalle del inmueble desde la API externa directamente
+      const inmuebleDetalle = await getInmuebleDetalleApi(inmuebleId);
+      setInmuebleToView(inmuebleDetalle);
+      setDetailModalOpen(true);
+      
+      console.log('✅ Inmueble detail loaded successfully');
+    } catch (error) {
+      console.error('❌ Error getting inmueble detail:', error);
+      alert(error instanceof Error ? error.message : 'Error al obtener detalle del inmueble');
+    }
   };
 
   const handleEditSubmit = async (inmuebleData: IInmuebleForm) => {
@@ -137,7 +161,12 @@ const Properties: React.FC = () => {
       ) : error ? (
         <div className="text-red-500">{error}</div>
       ) : (
-        <InmueblesTable inmuebles={inmuebles} onEdit={handleEdit} onDelete={handleDelete} />
+        <InmueblesTable 
+          inmuebles={inmuebles} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete} 
+          onViewDetail={handleViewDetail}
+        />
       )}
       <CreateInmuebleModal 
         open={modalOpen} 
@@ -154,13 +183,18 @@ const Properties: React.FC = () => {
         initialData={inmuebleToEdit ? {
           nombre: inmuebleToEdit.nombre,
           direccion: inmuebleToEdit.direccion,
-          tipo: inmuebleToEdit.tipo,
-          estado: inmuebleToEdit.estado,
-          precio: inmuebleToEdit.precio,
+          edificio: inmuebleToEdit.edificio,
+          apartamento: inmuebleToEdit.apartamento,
+          comision: inmuebleToEdit.comision,
+          id_propietario: inmuebleToEdit.id_propietario,
+          // precio: inmuebleToEdit.precio, // Removed because 'precio' is not in IInmuebleForm
+          precio_limpieza: inmuebleToEdit.precio_limpieza,
+          id_producto_sigo: inmuebleToEdit.id_producto_sigo,
           descripcion: inmuebleToEdit.descripcion,
+          capacidad_maxima: inmuebleToEdit.capacidad_maxima,
           habitaciones: inmuebleToEdit.habitaciones,
           banos: inmuebleToEdit.banos,
-          area: inmuebleToEdit.area,
+          tiene_cocina: inmuebleToEdit.tiene_cocina,
           id_empresa: inmuebleToEdit.id_empresa
         } : undefined}
         isEdit={true}
@@ -175,6 +209,14 @@ const Properties: React.FC = () => {
         }}
       />
       <SuccessModal open={successOpen} message={successMsg} onClose={() => setSuccessOpen(false)} />
+      <InmuebleDetailModal
+        open={detailModalOpen}
+        onClose={() => {
+          setDetailModalOpen(false);
+          setInmuebleToView(null);
+        }}
+        inmueble={inmuebleToView}
+      />
     </div>
   );
 };

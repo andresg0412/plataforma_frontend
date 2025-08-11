@@ -29,14 +29,18 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
     defaultValues: initialData || {
       nombre: '',
       direccion: '',
-      tipo: 'apartamento',
-      estado: 'disponible',
-      precio: 0,
+      edificio: '',
+      apartamento: '',
+      id_producto_sigo: '',
       descripcion: '',
+      capacidad_maxima: 1,
       habitaciones: 1,
       banos: 1,
-      area: 0,
-      id_empresa: '1' // Por ahora usamos un valor predeterminado
+      comision: 0,
+      precio_limpieza: 0,
+      tiene_cocina: false,
+      id_propietario: '',
+      id_empresa: '1'
     }
   });
 
@@ -47,14 +51,18 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
       reset({
         nombre: '',
         direccion: '',
-        tipo: 'apartamento',
-        estado: 'disponible',
-        precio: 0,
+        edificio: '',
+        apartamento: '',
+        id_producto_sigo: '',
         descripcion: '',
+        capacidad_maxima: 1,
         habitaciones: 1,
         banos: 1,
-        area: 0,
-        id_empresa: '1' // Por ahora usamos un valor predeterminado
+        comision: 0,
+        precio_limpieza: 0,
+        tiene_cocina: false,
+        id_propietario: '',
+        id_empresa: '1'
       });
     }
   }, [open, initialData, isEdit, reset, user]);
@@ -102,7 +110,6 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
                   {...register('nombre', { required: 'El nombre es requerido' })}
                   className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   placeholder="Ej: Apartamento Centro"
-                  disabled={isEdit}
                 />
                 {errors.nombre && (
                   <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>
@@ -111,27 +118,21 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tipo de Inmueble *
+                  ID Producto Sigo *
                 </label>
-                <select
-                  {...register('tipo', { required: 'El tipo es requerido' })}
+                <input
+                  type="text"
+                  {...register('id_producto_sigo', { required: 'El ID del producto Sigo es requerido' })}
                   className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  disabled={isEdit}
-                >
-                  <option value="apartamento">Apartamento</option>
-                  <option value="casa">Casa</option>
-                  <option value="studio">Studio</option>
-                  <option value="penthouse">Penthouse</option>
-                  <option value="oficina">Oficina</option>
-                  <option value="local">Local Comercial</option>
-                </select>
-                {errors.tipo && (
-                  <p className="text-red-500 text-xs mt-1">{errors.tipo.message}</p>
+                  placeholder="Ej: SIGO123"
+                />
+                {errors.id_producto_sigo && (
+                  <p className="text-red-500 text-xs mt-1">{errors.id_producto_sigo.message}</p>
                 )}
               </div>
             </div>
 
-            {/* Dirección */}
+            {/* Dirección y ubicación */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Dirección *
@@ -141,67 +142,80 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
                 {...register('direccion', { required: 'La dirección es requerida' })}
                 className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Ej: Calle 10 #5-20, Centro"
-                disabled={isEdit}
               />
               {errors.direccion && (
                 <p className="text-red-500 text-xs mt-1">{errors.direccion.message}</p>
               )}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Edificio *
+                </label>
+                <input
+                  type="text"
+                  {...register('edificio', { required: 'El edificio es requerido' })}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="Ej: Torre Central"
+                />
+                {errors.edificio && (
+                  <p className="text-red-500 text-xs mt-1">{errors.edificio.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Apartamento *
+                </label>
+                <input
+                  type="text"
+                  {...register('apartamento', { required: 'El apartamento es requerido' })}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="Ej: 501"
+                />
+                {errors.apartamento && (
+                  <p className="text-red-500 text-xs mt-1">{errors.apartamento.message}</p>
+                )}
+              </div>
+            </div>
+
             {/* Descripción */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Descripción
+                Descripción *
               </label>
               <textarea
-                {...register('descripcion')}
+                {...register('descripcion', { required: 'La descripción es requerida' })}
                 rows={3}
                 className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="Descripción del inmueble"
               />
+              {errors.descripcion && (
+                <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>
+              )}
             </div>
 
-            {/* Precio y Estado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Capacidad y características */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Precio (COP) *
+                  Capacidad Máxima *
                 </label>
                 <input
                   type="number"
-                  {...register('precio', { 
-                    required: 'El precio es requerido',
-                    min: { value: 0, message: 'El precio debe ser mayor a 0' }
+                  {...register('capacidad_maxima', { 
+                    required: 'La capacidad máxima es requerida',
+                    min: { value: 1, message: 'Debe ser mayor a 0' }
                   })}
                   className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder="800000"
+                  placeholder="4"
                 />
-                {errors.precio && (
-                  <p className="text-red-500 text-xs mt-1">{errors.precio.message}</p>
+                {errors.capacidad_maxima && (
+                  <p className="text-red-500 text-xs mt-1">{errors.capacidad_maxima.message}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Estado *
-                </label>
-                <select
-                  {...register('estado', { required: 'El estado es requerido' })}
-                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="disponible">Disponible</option>
-                  <option value="ocupado">Ocupado</option>
-                  <option value="mantenimiento">En Mantenimiento</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-                {errors.estado && (
-                  <p className="text-red-500 text-xs mt-1">{errors.estado.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Características */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Habitaciones *
@@ -237,24 +251,98 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
                   <p className="text-red-500 text-xs mt-1">{errors.banos.message}</p>
                 )}
               </div>
+            </div>
 
+            {/* Precios y comisión */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Área (m²) *
+                  Comisión *
                 </label>
                 <input
                   type="number"
-                  {...register('area', { 
-                    required: 'El área es requerida',
-                    min: { value: 1, message: 'El área debe ser mayor a 0' }
+                  step="0.01"
+                  {...register('comision', { 
+                    required: 'La comisión es requerida',
+                    min: { value: 0, message: 'Debe ser mayor o igual a 0' }
                   })}
                   className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  placeholder="65"
+                  placeholder="0.10"
                 />
-                {errors.area && (
-                  <p className="text-red-500 text-xs mt-1">{errors.area.message}</p>
+                {errors.comision && (
+                  <p className="text-red-500 text-xs mt-1">{errors.comision.message}</p>
                 )}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Precio Limpieza
+                </label>
+                <input
+                  type="number"
+                  {...register('precio_limpieza', { 
+                    min: { value: 0, message: 'Debe ser mayor o igual a 0' }
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="50000"
+                />
+                {errors.precio_limpieza && (
+                  <p className="text-red-500 text-xs mt-1">{errors.precio_limpieza.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* IDs requeridos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  ID Propietario *
+                </label>
+                <input
+                  type="number"
+                  {...register('id_propietario', { 
+                    required: 'El ID del propietario es requerido',
+                    min: { value: 1, message: 'Debe ser mayor a 0' }
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="1"
+                />
+                {errors.id_propietario && (
+                  <p className="text-red-500 text-xs mt-1">{errors.id_propietario.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  ID Empresa *
+                </label>
+                <input
+                  type="number"
+                  {...register('id_empresa', { 
+                    required: 'El ID de la empresa es requerido',
+                    min: { value: 1, message: 'Debe ser mayor a 0' }
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  placeholder="1"
+                />
+                {errors.id_empresa && (
+                  <p className="text-red-500 text-xs mt-1">{errors.id_empresa.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Cocina */}
+            <div>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  {...register('tiene_cocina')}
+                  className="rounded border-gray-300 dark:border-gray-600"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Tiene cocina
+                </span>
+              </label>
             </div>
 
             {/* Botones */}

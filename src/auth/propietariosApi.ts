@@ -117,11 +117,11 @@ export const getInmueblesPropietarioApi = async (propietarioId: number) => {
 // Obtener detalle de un inmueble
 export const getInmuebleDetalleApi = async (inmuebleId: string) => {
   try {
-    const response = await apiFetch(`/api/propietarios/getInmuebleDetalle?id=${inmuebleId}`, {
+    const response = await apiFetch(`/api/inmuebles/getInmuebleDetalle?id=${inmuebleId}`, {
       method: 'GET',
     });
 
-    if (response.isError) {
+    if (!response.success) {
       throw new Error(response.message || 'Error al obtener detalle del inmueble');
     }
 

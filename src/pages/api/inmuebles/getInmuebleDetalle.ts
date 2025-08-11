@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IInmueble } from '../../../interfaces/Inmueble';
 
-// Interfaz para la respuesta de la API externa
+// Interfaz para la respuesta de la API externa (un solo inmueble)
 interface ExternalInmuebleResponse {
   id_inmueble: number;
   nombre: string | null;
@@ -27,7 +27,7 @@ interface ExternalInmuebleResponse {
 
 interface ExternalApiResponse {
   isError: boolean;
-  data: ExternalInmuebleResponse[];
+  data: ExternalInmuebleResponse;
   message?: string;
 }
 
@@ -42,8 +42,8 @@ const mapInmuebleFromAPI = (inmuebleAPI: ExternalInmuebleResponse): IInmueble =>
     apartamento: inmuebleAPI.apartamento || 'Sin apartamento',
     comision: (inmuebleAPI.comision ?? 0) * 1000, // Convertir porcentaje a valor monetario
     id_propietario: (inmuebleAPI.id_propietario ?? 0).toString(),
-    tipo: mapTipoInmueble(inmuebleAPI.nombre || ''), // Mockeo basado en el nombre
-    estado: mapEstadoInmueble(inmuebleAPI.estado || 'activo'),
+    tipo: mapTipoInmueble(inmuebleAPI.nombre), // Mockeo basado en el nombre
+    estado: mapEstadoInmueble(inmuebleAPI.estado),
     precio: generateMockPrice(inmuebleAPI.capacidad_maxima ?? inmuebleAPI.capacidad ?? 1), // Mockeo basado en capacidad
     precio_limpieza: inmuebleAPI.precio_limpieza ?? 0,
     id_producto_sigo: inmuebleAPI.id_prod_sigo || 'SIN_ID',
@@ -100,14 +100,6 @@ const generateMockArea = (habitaciones: number | null): number => {
   return baseArea + (safeHabitaciones * 25);
 };
 
-// Función para obtener el token de autenticación
-const getAuthToken = (): string | null => {
-  // En un entorno real, esto podría venir de las cookies, headers, etc.
-  // Por ahora usaremos el localStorage del lado del cliente
-  // que se pasará como header en las peticiones
-  return null; // El token se manejará desde el cliente
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ 
@@ -117,14 +109,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de inmueble requerido'
+      });
+    }
+
     const apiUrl = process.env.API_URL || 'http://localhost:3001';
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
     
-    console.log('🚀 Calling external API:', `${apiUrl}/inmuebles/getInmuebles`);
+    console.log('🚀 Calling external API for inmueble detail:', `${apiUrl}/inmuebles/getInmuebles?id=${id}`);
     console.log('🔑 Using token:', token ? 'Token present' : 'No token');
     
     // Realizar la llamada a la API externa
-    const response = await fetch(`${apiUrl}/inmuebles/getInmuebles`, {
+    const response = await fetch(`${apiUrl}/inmuebles/getInmuebles?id=${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -137,9 +138,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const externalData: ExternalApiResponse = await response.json();
-    console.log('📥 External API response:', {
+    console.log('📥 External API response for inmueble detail:', {
       isError: externalData.isError,
-      dataCount: externalData.data?.length || 0,
+      hasData: !!externalData.data,
       message: externalData.message
     });
 
@@ -152,52 +153,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Mapear los datos al formato esperado por el frontend
-    const inmuebles = externalData.data.map((inmuebleAPI, index) => {
-      try {
-        return mapInmuebleFromAPI(inmuebleAPI);
-      } catch (mapError) {
-        console.error(`❌ Error mapping inmueble at index ${index}:`, mapError);
-        console.error('📄 Problematic inmueble data:', inmuebleAPI);
-        // Retornar un inmueble por defecto en caso de error
-        return {
-          id: `error_${index}`,
-          id_inmueble: `error_${index}`,
-          nombre: 'Error en datos',
-          direccion: 'Sin dirección',
-          edificio: 'Sin edificio',
-          apartamento: 'Sin apartamento',
-          comision: 0,
-          id_propietario: '0',
-          tipo: 'apartamento' as const,
-          estado: 'inactivo' as const,
-          precio: 0,
-          precio_limpieza: 0,
-          id_producto_sigo: 'ERROR',
-          descripcion: 'Error al procesar datos del inmueble',
-          capacidad_maxima: 1,
-          habitaciones: 1,
-          banos: 1,
-          area: 0,
-          tiene_cocina: false,
-          id_empresa: '0',
-          nombre_empresa: 'Error',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
-        } as IInmueble;
-      }
-    });
-    
-    console.log('✅ Mapped inmuebles count:', inmuebles.length);
+    // Verificar si se encontró el inmueble
+    if (!externalData.data) {
+      return res.status(404).json({
+        success: false,
+        data: null,
+        message: 'Inmueble no encontrado'
+      });
+    }
 
-    res.status(200).json({
-      success: true,
-      data: inmuebles,
-      message: 'Inmuebles obtenidos exitosamente'
-    });
+    // Mapear los datos al formato esperado por el frontend
+    try {
+      const inmueble = mapInmuebleFromAPI(externalData.data);
+      console.log('✅ Mapped inmueble detail successfully');
+
+      res.status(200).json({
+        success: true,
+        data: inmueble,
+        message: 'Inmueble obtenido exitosamente'
+      });
+    } catch (mapError) {
+      console.error('❌ Error mapping inmueble detail:', mapError);
+      console.error('📄 Problematic inmueble data:', externalData.data);
+      
+      return res.status(500).json({
+        success: false,
+        data: null,
+        message: 'Error procesando datos del inmueble'
+      });
+    }
 
   } catch (error) {
-    console.error('❌ Error in getInmuebles API:', error);
+    console.error('❌ Error in getInmuebleDetalle API:', error);
     
     res.status(500).json({
       success: false,

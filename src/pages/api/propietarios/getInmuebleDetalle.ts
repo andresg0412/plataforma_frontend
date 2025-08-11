@@ -1,85 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-// Data mockeada para inmuebles
-const mockInmuebles = {
-  'INM001': {
-    id: 'INM001',
-    nombre: 'Apartamento Vista Norte',
-    direccion: 'Carrera 15 #85-23, Bogotá',
-    tipo: 'apartamento',
-    estado: 'disponible',
-    precio: 1500000,
-    descripcion: 'Hermoso apartamento con vista panorámica de la ciudad, ubicado en zona exclusiva.',
-    habitaciones: 3,
-    banos: 2,
-    area: 85,
-    id_propietario: 1,
-    fecha_creacion: '2024-01-15',
-    fecha_actualizacion: '2024-01-15'
-  },
-  'INM002': {
-    id: 'INM002',
-    nombre: 'Casa Familiar Los Rosales',
-    direccion: 'Calle 72 #11-45, Bogotá',
-    tipo: 'casa',
-    estado: 'ocupado',
-    precio: 2800000,
-    descripcion: 'Casa familiar de dos pisos en barrio residencial tranquilo.',
-    habitaciones: 4,
-    banos: 3,
-    area: 150,
-    id_propietario: 2,
-    fecha_creacion: '2024-02-10',
-    fecha_actualizacion: '2024-02-10'
-  },
-  'INM003': {
-    id: 'INM003',
-    nombre: 'Studio Moderno Centro',
-    direccion: 'Carrera 10 #20-30, Bogotá',
-    tipo: 'studio',
-    estado: 'mantenimiento',
-    precio: 900000,
-    descripcion: 'Studio moderno en el centro de la ciudad, ideal para profesionales.',
-    habitaciones: 1,
-    banos: 1,
-    area: 45,
-    id_propietario: 1,
-    fecha_creacion: '2024-01-28',
-    fecha_actualizacion: '2024-03-01'
-  },
-  'INM004': {
-    id: 'INM004',
-    nombre: 'Penthouse Luxury',
-    direccion: 'Carrera 10 #30-55, Cali',
-    tipo: 'penthouse',
-    estado: 'disponible',
-    precio: 4500000,
-    descripcion: 'Lujoso penthouse con terraza privada y acabados de primera calidad.',
-    habitaciones: 5,
-    banos: 4,
-    area: 220,
-    id_propietario: 4,
-    fecha_creacion: '2024-03-05',
-    fecha_actualizacion: '2024-03-05'
-  },
-  'INM005': {
-    id: 'INM005',
-    nombre: 'Oficina Ejecutiva',
-    direccion: 'Avenida El Poblado #45-67, Cali',
-    tipo: 'oficina',
-    estado: 'disponible',
-    precio: 1200000,
-    descripcion: 'Oficina ejecutiva en edificio corporativo con excelente ubicación.',
-    habitaciones: 0,
-    banos: 1,
-    area: 60,
-    id_propietario: 4,
-    fecha_creacion: '2024-03-05',
-    fecha_actualizacion: '2024-03-05'
-  }
-};
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+// Redirigir a la nueva API de inmuebles para mantener compatibilidad
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       isError: true,
@@ -99,9 +21,37 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    const inmueble = mockInmuebles[id as keyof typeof mockInmuebles];
+    const apiUrl = process.env.API_URL || 'http://localhost:3001';
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    
+    console.log('🔄 Redirecting to inmuebles API for compatibility:', `${apiUrl}/inmuebles/getInmuebles?id=${id}`);
+    
+    // Realizar la llamada a la API externa (misma que usa getInmuebleDetalle)
+    const response = await fetch(`${apiUrl}/inmuebles/getInmuebles?id=${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-    if (!inmueble) {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const externalData = await response.json();
+
+    // Verificar si la API externa retornó error
+    if (externalData.isError) {
+      return res.status(400).json({
+        isError: true,
+        data: null,
+        message: externalData.message || 'Error desde la API externa'
+      });
+    }
+
+    // Verificar si se encontró el inmueble
+    if (!externalData.data) {
       return res.status(404).json({
         isError: true,
         data: null,
@@ -109,20 +59,36 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Simular delay de red
-    setTimeout(() => {
-      res.status(200).json({
-        isError: false,
-        data: inmueble,
-        message: 'Detalle del inmueble obtenido exitosamente'
-      });
-    }, 400);
+    // Convertir el formato de respuesta de inmuebles al formato esperado por propietarios
+    const inmuebleFormatted = {
+      id: externalData.data.id_inmueble?.toString() || 'sin_id',
+      nombre: externalData.data.nombre || 'Sin nombre',
+      direccion: externalData.data.direccion || 'Sin dirección',
+      tipo: externalData.data.tipo || 'apartamento',
+      estado: externalData.data.estado || 'disponible',
+      precio: externalData.data.precio || 0,
+      descripcion: externalData.data.descripcion || 'Sin descripción',
+      habitaciones: externalData.data.nro_habitaciones || 1,
+      banos: externalData.data.nro_bahnos || 1,
+      area: externalData.data.area || 0,
+      id_propietario: externalData.data.id_propietario || 0,
+      fecha_creacion: new Date().toISOString().split('T')[0],
+      fecha_actualizacion: new Date().toISOString().split('T')[0]
+    };
+
+    res.status(200).json({
+      isError: false,
+      data: inmuebleFormatted,
+      message: 'Detalle del inmueble obtenido exitosamente'
+    });
 
   } catch (error) {
+    console.error('❌ Error in legacy getInmuebleDetalle API:', error);
+    
     res.status(500).json({
       isError: true,
       data: null,
-      message: 'Error interno del servidor'
+      message: error instanceof Error ? error.message : 'Error interno del servidor'
     });
   }
 }
