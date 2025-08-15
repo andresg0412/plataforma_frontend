@@ -119,11 +119,15 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ID Producto Sigo *
+                  {isEdit && <span className="text-xs text-gray-500 ml-1">(No editable)</span>}
                 </label>
                 <input
                   type="text"
                   {...register('id_producto_sigo', { required: 'El ID del producto Sigo es requerido' })}
-                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  disabled={isEdit}
+                  className={`w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
+                    isEdit ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75' : ''
+                  }`}
                   placeholder="Ej: SIGO123"
                 />
                 {errors.id_producto_sigo && (
@@ -297,6 +301,7 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ID Propietario *
+                  {isEdit && <span className="text-xs text-gray-500 ml-1">(No editable)</span>}
                 </label>
                 <input
                   type="number"
@@ -304,7 +309,10 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
                     required: 'El ID del propietario es requerido',
                     min: { value: 1, message: 'Debe ser mayor a 0' }
                   })}
-                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  disabled={isEdit}
+                  className={`w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
+                    isEdit ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75' : ''
+                  }`}
                   placeholder="1"
                 />
                 {errors.id_propietario && (
@@ -315,6 +323,7 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ID Empresa *
+                  {isEdit && <span className="text-xs text-gray-500 ml-1">(No editable)</span>}
                 </label>
                 <input
                   type="number"
@@ -322,7 +331,10 @@ const CreateInmuebleModal: React.FC<CreateInmuebleModalProps> = ({
                     required: 'El ID de la empresa es requerido',
                     min: { value: 1, message: 'Debe ser mayor a 0' }
                   })}
-                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  disabled={isEdit}
+                  className={`w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-white ${
+                    isEdit ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75' : ''
+                  }`}
                   placeholder="1"
                 />
                 {errors.id_empresa && (
