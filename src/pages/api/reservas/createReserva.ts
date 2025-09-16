@@ -1,0 +1,252 @@
+﻿import type { NextApiRequest, NextApiResponse } from 'next';
+import { IReservaForm, IReservaTableData } from '../../../interfaces/Reserva';
+
+// Interfaz para la respuesta de la API externa al crear reserva
+interface ExternalCreateReservaResponse {
+  id: number;
+  codigo_reserva: string;
+  id_inmueble: number;
+  nombre_inmueble: string;
+  huesped_principal: {
+    nombre: string;
+    apellido: string;
+    email: string;
+    telefono: string;
+  };
+  fecha_entrada: string;
+  fecha_salida: string;
+  numero_huespedes: number;
+  huespedes: Array<{
+    id: number;
+    nombre: string;
+    apellido: string;
+    email: string;
+    telefono: string;
+    documento_tipo: 'cedula' | 'pasaporte' | 'tarjeta_identidad';
+    documento_numero: string;
+    fecha_nacimiento: string;
+    es_principal: boolean;
+    id_reserva: number;
+  }>;
+  precio_total: number;
+  estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
+  fecha_creacion: string;
+  observaciones?: string;
+  id_empresa: number;
+}
+
+interface ExternalApiResponse {
+  isError: boolean;
+  data: ExternalCreateReservaResponse;
+  message?: string;
+}
+
+/**
+ * Valida los datos de entrada para crear una reserva
+ */
+const validateReservaData = (data: any): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  if (!data.id_inmueble || typeof data.id_inmueble !== 'number') {
+    errors.push('El ID del inmueble es requerido y debe ser un número');
+  }
+
+  // Validar huéspedes
+  if (!data.huespedes || !Array.isArray(data.huespedes) || data.huespedes.length === 0) {
+    errors.push('Debe incluir al menos un huésped');
+  } else {
+    // Validar que exista un huésped principal
+    const huespedesPrincipales = data.huespedes.filter((h: any) => h.es_principal);
+    if (huespedesPrincipales.length !== 1) {
+      errors.push('Debe haber exactamente un huésped principal');
+    }
+
+    // Validar cada huésped
+    data.huespedes.forEach((huesped: any, index: number) => {
+      if (!huesped.nombre || typeof huesped.nombre !== 'string' || huesped.nombre.trim().length < 2) {
+        errors.push(`El nombre del huésped ${index + 1} es requerido y debe tener al menos 2 caracteres`);
+      }
+
+      if (!huesped.apellido || typeof huesped.apellido !== 'string' || huesped.apellido.trim().length < 2) {
+        errors.push(`El apellido del huésped ${index + 1} es requerido y debe tener al menos 2 caracteres`);
+      }
+
+      if (!huesped.email || typeof huesped.email !== 'string' || !/\S+@\S+\.\S+/.test(huesped.email)) {
+        errors.push(`El email del huésped ${index + 1} es requerido y debe ser válido`);
+      }
+
+      if (!huesped.telefono || typeof huesped.telefono !== 'string' || huesped.telefono.trim().length < 10) {
+        errors.push(`El teléfono del huésped ${index + 1} es requerido y debe tener al menos 10 caracteres`);
+      }
+
+      if (!huesped.documento_numero || typeof huesped.documento_numero !== 'string' || huesped.documento_numero.trim().length < 5) {
+        errors.push(`El documento del huésped ${index + 1} es requerido y debe tener al menos 5 caracteres`);
+      }
+
+      if (!huesped.documento_tipo || !['cedula', 'pasaporte', 'tarjeta_identidad'].includes(huesped.documento_tipo)) {
+        errors.push(`El tipo de documento del huésped ${index + 1} es requerido y debe ser válido`);
+      }
+
+      if (!huesped.fecha_nacimiento || typeof huesped.fecha_nacimiento !== 'string') {
+        errors.push(`La fecha de nacimiento del huésped ${index + 1} es requerida`);
+      }
+    });
+  }
+
+  if (!data.fecha_entrada || typeof data.fecha_entrada !== 'string') {
+    errors.push('La fecha de entrada es requerida');
+  }
+
+  if (!data.fecha_salida || typeof data.fecha_salida !== 'string') {
+    errors.push('La fecha de salida es requerida');
+  }
+
+  if (data.fecha_entrada && data.fecha_salida && new Date(data.fecha_entrada) >= new Date(data.fecha_salida)) {
+    errors.push('La fecha de salida debe ser posterior a la fecha de entrada');
+  }
+
+  if (!data.numero_huespedes || typeof data.numero_huespedes !== 'number' || data.numero_huespedes < 1) {
+    errors.push('El número de huéspedes es requerido y debe ser mayor a 0');
+  }
+
+  // Validar que el número de huéspedes coincida con el array
+  if (data.huespedes && data.numero_huespedes !== data.huespedes.length) {
+    errors.push('El número de huéspedes no coincide con la cantidad de huéspedes proporcionados');
+  }
+
+  if (!data.precio_total || typeof data.precio_total !== 'number' || data.precio_total <= 0) {
+    errors.push('El precio total es requerido y debe ser mayor a 0');
+  }
+
+  if (!data.estado || !['pendiente', 'confirmada', 'en_proceso', 'completada', 'cancelada'].includes(data.estado)) {
+    errors.push('El estado es requerido y debe ser válido');
+  }
+
+  if (!data.id_empresa || typeof data.id_empresa !== 'number') {
+    errors.push('El ID de la empresa es requerido');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Mapea la respuesta de la API externa al formato interno
+ */
+const mapReservaFromAPI = (reservaAPI: ExternalCreateReservaResponse): IReservaTableData => {
+  return {
+    id: reservaAPI.id,
+    codigo_reserva: reservaAPI.codigo_reserva,
+    id_inmueble: reservaAPI.id_inmueble,
+    nombre_inmueble: reservaAPI.nombre_inmueble,
+    huesped_principal: reservaAPI.huesped_principal,
+    fecha_entrada: reservaAPI.fecha_entrada,
+    fecha_salida: reservaAPI.fecha_salida,
+    numero_huespedes: reservaAPI.numero_huespedes,
+    huespedes: reservaAPI.huespedes,
+    precio_total: reservaAPI.precio_total,
+    estado: reservaAPI.estado,
+    fecha_creacion: reservaAPI.fecha_creacion,
+    observaciones: reservaAPI.observaciones || '',
+    id_empresa: reservaAPI.id_empresa,
+  };
+};
+
+/**
+ * Crea una nueva reserva llamando a la API externa
+ * @param req - Request object
+ * @param res - Response object
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      success: false,
+      message: 'Método no permitido' 
+    });
+  }
+
+  try {
+    const reservaData: IReservaForm = req.body;
+
+    // Validar datos de entrada
+    const validation = validateReservaData(reservaData);
+    if (!validation.isValid) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: 'Datos de entrada inválidos',
+        errors: validation.errors
+      });
+    }
+
+    const apiUrl = process.env.API_URL || 'http://localhost:3001';
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+
+    console.log('🚀 Creando reserva en API externa:', `${apiUrl}/reservas`);
+    console.log('🔑 Token presente:', token ? 'Sí' : 'No');
+    console.log('📋 Datos de reserva:', {
+      id_inmueble: reservaData.id_inmueble,
+      numero_huespedes: reservaData.numero_huespedes,
+      huespedes_count: reservaData.huespedes.length,
+      huesped_principal: reservaData.huespedes.find(h => h.es_principal)?.nombre + ' ' + reservaData.huespedes.find(h => h.es_principal)?.apellido,
+      fecha_entrada: reservaData.fecha_entrada,
+      fecha_salida: reservaData.fecha_salida,
+      precio_total: reservaData.precio_total,
+      estado: reservaData.estado,
+      id_empresa: reservaData.id_empresa
+    });
+
+    // Realizar la llamada a la API externa
+    const response = await fetch(`${apiUrl}/reservas`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(reservaData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const externalData: ExternalApiResponse = await response.json();
+    console.log(' Respuesta API externa:', {
+      isError: externalData.isError,
+      message: externalData.message,
+      reservaId: externalData.data?.id,
+      codigoReserva: externalData.data?.codigo_reserva
+    });
+
+    // Verificar si la API externa retornó error
+    if (externalData.isError) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: externalData.message || 'Error desde la API externa'
+      });
+    }
+
+    // Mapear los datos al formato esperado por el frontend
+    const nuevaReserva = mapReservaFromAPI(externalData.data);
+    
+    console.log(' Reserva creada exitosamente:', nuevaReserva.codigo_reserva);
+    
+    res.status(201).json({
+      success: true,
+      data: nuevaReserva,
+      message: 'Reserva creada exitosamente'
+    });
+
+  } catch (error) {
+    console.error(' Error en createReserva API:', error);
+    
+    res.status(500).json({
+      success: false,
+      data: null,
+      message: error instanceof Error ? error.message : 'Error interno del servidor'
+    });
+  }
+}

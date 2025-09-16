@@ -33,14 +33,23 @@ export interface IReserva {
   id_empresa: number;
 }
 
+export interface IHuespedForm {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  documento_tipo: 'cedula' | 'pasaporte' | 'tarjeta_identidad';
+  documento_numero: string;
+  fecha_nacimiento: string;
+  es_principal: boolean;
+}
+
 export interface IReservaForm {
   id_inmueble: number;
-  huesped_nombre: string;
-  huesped_email: string;
-  huesped_telefono: string;
   fecha_entrada: string;
   fecha_salida: string;
   numero_huespedes: number;
+  huespedes: IHuespedForm[];
   precio_total: number;
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   observaciones?: string;
