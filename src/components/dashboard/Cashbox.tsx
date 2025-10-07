@@ -1,10 +1,187 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import DateSelector from './DateSelector';
+import DailySummary from './DailySummary';
+import MovimientosTable from './MovimientosTable';
+import CreateMovimientoButton from './CreateMovimientoButton';
+import CreateMovimientoModal from './CreateMovimientoModal';
+import MovimientoDetailModal from './MovimientoDetailModal';
+import ConfirmModal from './ConfirmModal';
+import SuccessModal from './SuccessModal';
+import { IMovimiento, IResumenDiario } from '../../interfaces/Movimiento';
+import { 
+  getMovimientosByFecha, 
+  getResumenDiario, 
+  deleteMovimiento 
+} from '../../auth/movimientosApi';
 
-const Cashbox: React.FC = () => (
-  <div>
-    <h2 className="text-xl font-bold mb-2">Caja</h2>
-    <p>Gestión de caja y movimientos.</p>
-  </div>
-);
+const Cashbox: React.FC = () => {
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+  const [movimientos, setMovimientos] = useState<IMovimiento[]>([]);
+  const [resumen, setResumen] = useState<IResumenDiario | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Modals
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  
+  // Selected items
+  const [selectedMovimiento, setSelectedMovimiento] = useState<IMovimiento | null>(null);
+  const [movimientoToDelete, setMovimientoToDelete] = useState<IMovimiento | null>(null);
+  
+  // Success message
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, [selectedDate]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [movimientosResponse, resumenResponse] = await Promise.all([
+        getMovimientosByFecha(selectedDate),
+        getResumenDiario(selectedDate)
+      ]);
+
+      if (movimientosResponse.success && Array.isArray(movimientosResponse.data)) {
+        setMovimientos(movimientosResponse.data);
+      }
+
+      if (resumenResponse.success && resumenResponse.data) {
+        setResumen(resumenResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+  };
+
+  const handleCreateMovimiento = () => {
+    setSelectedMovimiento(null);
+    setShowCreateModal(true);
+  };
+
+  const handleEditMovimiento = (movimiento: IMovimiento) => {
+    setSelectedMovimiento(movimiento);
+    setShowCreateModal(true);
+  };
+
+  const handleViewMovimiento = (movimiento: IMovimiento) => {
+    setSelectedMovimiento(movimiento);
+    setShowDetailModal(true);
+  };
+
+  const handleDeleteMovimiento = (movimiento: IMovimiento) => {
+    setMovimientoToDelete(movimiento);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!movimientoToDelete) return;
+
+    try {
+      const response = await deleteMovimiento(movimientoToDelete.id);
+      if (response.success) {
+        setSuccessMessage('Movimiento eliminado exitosamente');
+        setShowSuccessModal(true);
+        await loadData(); // Reload data
+      } else {
+        alert(response.message || 'Error al eliminar movimiento');
+      }
+    } catch (error) {
+      console.error('Error deleting movimiento:', error);
+      alert('Error al eliminar movimiento');
+    } finally {
+      setShowConfirmModal(false);
+      setMovimientoToDelete(null);
+    }
+  };
+
+  const handleModalSuccess = async () => {
+    setSuccessMessage(selectedMovimiento ? 'Movimiento actualizado exitosamente' : 'Movimiento creado exitosamente');
+    setShowSuccessModal(true);
+    await loadData(); // Reload data
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-tourism-navy">Caja Diaria</h1>
+          <p className="text-gray-600">Gestión de movimientos de ingresos y egresos</p>
+        </div>
+        <CreateMovimientoButton onClick={handleCreateMovimiento} />
+      </div>
+
+      {/* Date Selector */}
+      <DateSelector 
+        selectedDate={selectedDate} 
+        onDateChange={handleDateChange} 
+      />
+
+      {/* Daily Summary */}
+      <DailySummary 
+        resumen={resumen} 
+        loading={loading} 
+      />
+
+      {/* Movements Table */}
+      <MovimientosTable
+        movimientos={movimientos}
+        loading={loading}
+        onView={handleViewMovimiento}
+        onEdit={handleEditMovimiento}
+        onDelete={handleDeleteMovimiento}
+      />
+
+      {/* Modals */}
+      <CreateMovimientoModal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          setSelectedMovimiento(null);
+        }}
+        onSuccess={handleModalSuccess}
+        movimiento={selectedMovimiento}
+        selectedDate={selectedDate}
+      />
+
+      <MovimientoDetailModal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedMovimiento(null);
+        }}
+        movimiento={selectedMovimiento}
+      />
+
+      <ConfirmModal
+        open={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setMovimientoToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        message={`¿Estás seguro de que deseas eliminar este movimiento? Esta acción no se puede deshacer.`}
+      />
+
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={successMessage}
+      />
+    </div>
+  );
+};
 
 export default Cashbox;
