@@ -53,6 +53,31 @@ export const getPagosReservaApi = async (idReserva: number): Promise<IPago[]> =>
 };
 
 /**
+ * Obtiene todos los pagos de una reserva específica para el modal de detalle
+ */
+export const getPagosReservaDetalleApi = async (idReserva: number): Promise<IPago[]> => {
+  try {
+    console.log('🔄 Obteniendo pagos detalle para reserva ID:', idReserva);
+    
+    const response: IPagoApiResponse = await apiFetch(`/api/reservas/pagos-detalle?id_reserva=${idReserva}`, {
+      method: 'GET',
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || 'Error al obtener pagos');
+    }
+
+    const pagos = Array.isArray(response.data) ? response.data : [];
+    console.log('✅ Pagos detalle obtenidos exitosamente:', pagos.length);
+    return pagos;
+    
+  } catch (error) {
+    console.error('❌ Error en getPagosReservaDetalleApi:', error);
+    throw error instanceof Error ? error : new Error('Error al obtener pagos de la reserva');
+  }
+};
+
+/**
  * Crea un nuevo pago para una reserva
  */
 export const createPagoApi = async (idReserva: number, pagoData: IPagoForm): Promise<IPago> => {

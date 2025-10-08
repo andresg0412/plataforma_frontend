@@ -1,7 +1,9 @@
-import React from 'react';
-import { X, Calendar, User, MapPin, CreditCard, Users, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Calendar, User, MapPin, CreditCard, Users, Clock, Trash2, AlertCircle } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { IReservaTableData } from '../../interfaces/Reserva';
+import { IPago } from '../../interfaces/Pago';
+import { getPagosReservaDetalleApi, deletePagoApi } from '../../auth/pagosApi';
 
 interface ReservaDetailModalProps {
   open: boolean;
@@ -14,6 +16,93 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
   onClose,
   reserva
 }) => {
+  const [pagos, setPagos] = useState<IPago[]>([]);
+  const [loadingPagos, setLoadingPagos] = useState(false);
+  const [errorPagos, setErrorPagos] = useState<string | null>(null);
+
+  // Cargar pagos cuando se abre el modal
+  useEffect(() => {
+    if (open && reserva) {
+      loadPagosReserva();
+    }
+  }, [open, reserva]);
+
+  // Resetear estado cuando se cierra el modal
+  useEffect(() => {
+    if (!open) {
+      setPagos([]);
+      setErrorPagos(null);
+    }
+  }, [open]);
+
+  /**
+   * Carga los pagos de la reserva
+   */
+  const loadPagosReserva = async () => {
+    if (!reserva) return;
+    
+    try {
+      setLoadingPagos(true);
+      setErrorPagos(null);
+      const pagosData = await getPagosReservaDetalleApi(reserva.id);
+      setPagos(pagosData);
+    } catch (error) {
+      console.error('Error cargando pagos:', error);
+      setErrorPagos('Error al cargar los pagos de la reserva');
+    } finally {
+      setLoadingPagos(false);
+    }
+  };
+
+  /**
+   * Elimina un pago específico
+   */
+  const handleDeletePago = async (pago: IPago) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar este pago de ${formatCurrency(pago.monto)}?`)) {
+      return;
+    }
+
+    try {
+      await deletePagoApi(pago.id);
+      
+      // Actualizar lista local
+      setPagos(prev => prev.filter(p => p.id !== pago.id));
+      
+      alert('Pago eliminado exitosamente');
+      
+    } catch (error) {
+      console.error('Error eliminando pago:', error);
+      alert(error instanceof Error ? error.message : 'Error al eliminar el pago');
+    }
+  };
+
+  /**
+   * Calcula el resumen de pagos en tiempo real
+   */
+  const calcularResumenPagos = () => {
+    const totalPagado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
+    const totalReserva = reserva?.total_reserva || reserva?.precio_total || 0;
+    const totalPendiente = totalReserva - totalPagado;
+    
+    return {
+      totalPagado,
+      totalPendiente,
+      cantidadPagos: pagos.length
+    };
+  };
+
+  /**
+   * Obtiene el ícono del método de pago
+   */
+  const getMetodoPagoIcon = (metodo: string) => {
+    switch (metodo) {
+      case 'tarjeta':
+        return <CreditCard className="h-4 w-4" />;
+      default:
+        return <span className="text-xs font-semibold">{metodo.toUpperCase()}</span>;
+    }
+  };
+
   if (!open || !reserva) return null;
 
   const formatDate = (dateString: string) => {
@@ -231,25 +320,170 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
               <div>
                 <label className="text-sm font-medium text-gray-600">Total Pagado/Abonado</label>
                 <p className="text-gray-900 font-medium text-green-600">
-                  {formatCurrency(reserva.total_pagado || 0)}
+                  {formatCurrency(pagos.length > 0 ? calcularResumenPagos().totalPagado : (reserva.total_pagado || 0))}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {reserva.total_pagado === 0 ? 'Sin abonos' : 
-                   reserva.total_pagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
-                   'Abono parcial'}
+                  {pagos.length > 0 
+                    ? calcularResumenPagos().totalPagado === 0 ? 'Sin abonos' : 
+                      calcularResumenPagos().totalPagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
+                      'Abono parcial'
+                    : reserva.total_pagado === 0 ? 'Sin abonos' : 
+                      reserva.total_pagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
+                      'Abono parcial'
+                  }
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Total Pendiente</label>
                 <p className={`font-medium ${
-                  (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === 0 ? 'text-green-600' :
-                  (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
-                  'text-orange-600'
+                  pagos.length > 0 
+                    ? calcularResumenPagos().totalPendiente === 0 ? 'text-green-600' :
+                      calcularResumenPagos().totalPendiente === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
+                      'text-orange-600'
+                    : (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === 0 ? 'text-green-600' :
+                      (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
+                      'text-orange-600'
                 }`}>
-                  {formatCurrency(reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0)))}
+                  {formatCurrency(
+                    pagos.length > 0 
+                      ? calcularResumenPagos().totalPendiente 
+                      : (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0)))
+                  )}
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Historial de Pagos */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-tourism-teal" />
+              Historial de Pagos ({pagos.length})
+            </h4>
+            
+            {/* Resumen actualizado en tiempo real */}
+            {pagos.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-white rounded-lg border">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Total Pagado (Calculado)</label>
+                  <p className="text-gray-900 font-medium text-green-600">
+                    {formatCurrency(calcularResumenPagos().totalPagado)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Total Pendiente (Calculado)</label>
+                  <p className={`font-medium ${
+                    calcularResumenPagos().totalPendiente === 0 ? 'text-green-600' :
+                    calcularResumenPagos().totalPendiente === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
+                    'text-orange-600'
+                  }`}>
+                    {formatCurrency(calcularResumenPagos().totalPendiente)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Número de Pagos</label>
+                  <p className="text-gray-900 font-medium">
+                    {calcularResumenPagos().cantidadPagos}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Estado de carga y errores */}
+            {loadingPagos ? (
+              <div className="text-center py-4">
+                <div className="text-gray-500">Cargando pagos...</div>
+              </div>
+            ) : errorPagos ? (
+              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg">
+                <AlertCircle className="h-5 w-5" />
+                <span>{errorPagos}</span>
+                <button
+                  onClick={loadPagosReserva}
+                  className="ml-auto text-sm bg-red-100 hover:bg-red-200 px-3 py-1 rounded-md transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : pagos.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="text-gray-500 mb-2">No hay pagos registrados para esta reserva</div>
+                <div className="text-sm text-gray-400">Los pagos aparecerán aquí una vez que se registren</div>
+              </div>
+            ) : (
+              /* Lista de pagos */
+              <div className="space-y-3">
+                {pagos.map((pago, index) => (
+                  <div 
+                    key={pago.id} 
+                    className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="bg-tourism-teal text-white text-xs font-semibold px-2 py-1 rounded-full">
+                          #{index + 1}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {getMetodoPagoIcon(pago.metodo_pago)}
+                          <span className="capitalize text-sm text-gray-600">{pago.metodo_pago}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-green-600">
+                          {formatCurrency(pago.monto)}
+                        </span>
+                        <button
+                          onClick={() => handleDeletePago(pago)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Eliminar pago"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-600">Fecha de Pago:</span>
+                        <p className="text-gray-900 font-medium">
+                          {formatDate(pago.fecha_pago)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Concepto:</span>
+                        <p className="text-gray-900 font-medium">{pago.concepto}</p>
+                      </div>
+                      {pago.descripcion && (
+                        <div className="md:col-span-2">
+                          <span className="text-gray-600">Descripción:</span>
+                          <p className="text-gray-900">{pago.descripcion}</p>
+                        </div>
+                      )}
+                      {pago.comprobante && (
+                        <div>
+                          <span className="text-gray-600">Comprobante:</span>
+                          <p className="text-gray-900 font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                            {pago.comprobante}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-gray-600">Registrado:</span>
+                        <p className="text-gray-900 text-xs">
+                          {new Date(pago.fecha_creacion).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Observaciones */}
