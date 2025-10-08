@@ -32,7 +32,7 @@ const analyticsItems = [
   { key: 'reports', title: 'Reportes', icon: BarChart3 },
   { key: 'cashbox', title: 'Caja', icon: CreditCard },
   { key: 'incomes', title: 'Ingresos', icon: CreditCard },
-  { key: 'deductions', title: 'Deducibles', icon: FileText },
+  { key: 'deductions', title: 'Egresos', icon: FileText },
 ];
 
 // Mapeo de permisos a claves de menú

@@ -31,7 +31,7 @@ const TABS = [
   { key: 'reports', label: 'Reportes', component: <Reports /> },
   { key: 'cashbox', label: 'Caja', component: <Cashbox /> },
   { key: 'incomes', label: 'Ingresos', component: <Incomes /> },
-  { key: 'deductions', label: 'Deducibles', component: <Deductions /> },
+  { key: 'deductions', label: 'Egresos', component: <Deductions /> },
 ];
 
 export default function DashboardPage() {
