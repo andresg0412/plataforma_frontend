@@ -26,7 +26,10 @@ export interface IReserva {
   fecha_salida: string;
   numero_huespedes: number;
   huespedes: IHuesped[];
-  precio_total: number;
+  precio_total: number; // Mantener por compatibilidad hacia atrás
+  total_reserva: number; // Monto total de la reserva
+  total_pagado: number; // Monto total pagado/abonado
+  total_pendiente: number; // Monto pendiente por pagar
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   fecha_creacion: string;
   observaciones?: string;
@@ -50,7 +53,9 @@ export interface IReservaForm {
   fecha_salida: string;
   numero_huespedes: number;
   huespedes: IHuespedForm[];
-  precio_total: number;
+  precio_total: number; // Mantener por compatibilidad hacia atrás
+  total_reserva: number; // Monto total de la reserva
+  total_pagado: number; // Monto total pagado/abonado
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   observaciones?: string;
   id_empresa: number;

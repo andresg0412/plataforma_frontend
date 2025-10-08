@@ -28,7 +28,10 @@ interface ExternalEditReservaResponse {
     es_principal: boolean;
     id_reserva: number;
   }>;
-  precio_total: number;
+  precio_total: number; // Mantener por compatibilidad
+  total_reserva: number; // Monto total de la reserva
+  total_pagado: number; // Monto total pagado/abonado
+  total_pendiente: number; // Monto pendiente por pagar
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   fecha_creacion: string;
   observaciones?: string;
@@ -162,6 +165,9 @@ const mapReservaFromAPI = (reservaAPI: ExternalEditReservaResponse): IReservaTab
     numero_huespedes: reservaAPI.numero_huespedes,
     huespedes: reservaAPI.huespedes,
     precio_total: reservaAPI.precio_total,
+    total_reserva: reservaAPI.total_reserva,
+    total_pagado: reservaAPI.total_pagado,
+    total_pendiente: reservaAPI.total_pendiente,
     estado: reservaAPI.estado,
     fecha_creacion: reservaAPI.fecha_creacion,
     observaciones: reservaAPI.observaciones || '',

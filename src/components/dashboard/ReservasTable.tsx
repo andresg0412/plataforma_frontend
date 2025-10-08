@@ -34,6 +34,18 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
     }).format(amount);
   };
 
+  const getPendingAmountColor = (pendiente: number, total: number) => {
+    if (pendiente === 0) return 'text-green-600'; // Totalmente pagado
+    if (pendiente === total) return 'text-red-600'; // Sin abonos
+    return 'text-orange-600'; // Abono parcial
+  };
+
+  const getPaymentStatus = (pagado: number, total: number) => {
+    if (pagado === 0) return 'Sin abonos';
+    if (pagado === total) return 'Pagado completo';
+    return 'Abono parcial';
+  };
+
   const getEstadoBadge = (estado: string) => {
     const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
     
@@ -82,7 +94,13 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
               Huéspedes
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Total
+              Total Reserva
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total Pagado
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total Pendiente
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Estado
@@ -95,7 +113,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {reservas.length === 0 ? (
             <tr>
-              <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                 No hay reservas registradas
               </td>
             </tr>
@@ -148,7 +166,23 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(reserva.precio_total)}
+                    {formatCurrency(reserva.total_reserva || reserva.precio_total)}
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatCurrency(reserva.total_pagado || 0)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {getPaymentStatus(reserva.total_pagado || 0, reserva.total_reserva || reserva.precio_total)}
+                  </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <div className={`text-sm font-medium ${getPendingAmountColor(
+                    reserva.total_pendiente || reserva.precio_total, 
+                    reserva.total_reserva || reserva.precio_total
+                  )}`}>
+                    {formatCurrency(reserva.total_pendiente || reserva.precio_total)}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">

@@ -37,7 +37,9 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
         es_principal: true,
       }
     ],
-    precio_total: 0,
+    precio_total: 0, // Mantener por compatibilidad
+    total_reserva: 0, // Monto total de la reserva
+    total_pagado: 0, // Monto total pagado/abonado
     estado: 'pendiente',
     observaciones: '',
     id_empresa: 1, // Por ahora hardcodeado
@@ -94,7 +96,9 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               es_principal: true,
             }
           ],
-          precio_total: 0,
+          precio_total: 0, // Mantener por compatibilidad
+          total_reserva: 0, // Monto total de la reserva
+          total_pagado: 0, // Monto total pagado/abonado
           estado: 'pendiente',
           observaciones: '',
           id_empresa: 1,
@@ -180,6 +184,19 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
       newErrors.precio_total = 'El precio debe ser mayor a 0';
     }
 
+    // Validaciones para los nuevos campos financieros
+    if (formData.total_reserva <= 0) {
+      newErrors.total_reserva = 'El total de la reserva debe ser mayor a 0';
+    }
+
+    if (formData.total_pagado < 0) {
+      newErrors.total_pagado = 'El total pagado no puede ser negativo';
+    }
+
+    if (formData.total_pagado > formData.total_reserva) {
+      newErrors.total_pagado = 'El total pagado no puede ser mayor al total de la reserva';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -193,6 +210,41 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
 
   const handleInputChange = (field: keyof IReservaForm, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  /**
+   * Función específica para manejar cambios en los campos financieros
+   * Garantiza consistencia entre total_reserva, total_pagado y total_pendiente
+   */
+  const handleFinancialChange = (field: 'total_reserva' | 'total_pagado', value: number) => {
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Mantener precio_total igual a total_reserva para compatibilidad
+      if (field === 'total_reserva') {
+        newData.precio_total = value;
+      }
+      
+      // Calcular total_pendiente automáticamente
+      const totalReserva = field === 'total_reserva' ? value : prev.total_reserva;
+      const totalPagado = field === 'total_pagado' ? value : prev.total_pagado;
+      
+      // Validar que total_pagado no sea mayor que total_reserva
+      if (totalPagado > totalReserva) {
+        return prev; // No actualizar si el pago excede el total
+      }
+      
+      return {
+        ...newData,
+        total_reserva: totalReserva,
+        total_pagado: totalPagado,
+      };
+    });
+    
+    // Limpiar errores relacionados
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -455,22 +507,60 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Precio Total *
+                Total Reserva *
               </label>
               <input
                 type="number"
                 min="0"
                 step="1000"
-                value={formData.precio_total}
-                onChange={(e) => handleInputChange('precio_total', parseFloat(e.target.value) || 0)}
+                value={formData.total_reserva}
+                onChange={(e) => handleFinancialChange('total_reserva', parseFloat(e.target.value) || 0)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.precio_total ? 'border-red-300' : 'border-gray-300'
+                  errors.total_reserva ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Ej: 150000"
               />
-              {errors.precio_total && (
-                <p className="text-red-500 text-xs mt-1">{errors.precio_total}</p>
+              {errors.total_reserva && (
+                <p className="text-red-500 text-xs mt-1">{errors.total_reserva}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Pagado/Abonado
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1000"
+                value={formData.total_pagado}
+                onChange={(e) => handleFinancialChange('total_pagado', parseFloat(e.target.value) || 0)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
+                  errors.total_pagado ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="Ej: 50000"
+              />
+              {errors.total_pagado && (
+                <p className="text-red-500 text-xs mt-1">{errors.total_pagado}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Monto que el huésped ha pagado como abono
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Pendiente
+              </label>
+              <div className={`w-full px-3 py-2 border rounded-md bg-gray-50 ${
+                (formData.total_reserva - formData.total_pagado) === 0 ? 'text-green-600' :
+                (formData.total_reserva - formData.total_pagado) === formData.total_reserva ? 'text-red-600' : 'text-orange-600'
+              }`}>
+                ${new Intl.NumberFormat('es-CO').format(formData.total_reserva - formData.total_pagado)}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Calculado automáticamente: Total Reserva - Total Pagado
+              </p>
             </div>
 
             <div>

@@ -171,7 +171,10 @@ const mockReservas: IReservaTableData[] = [
     fecha_salida: '2024-08-18',
     numero_huespedes: 2,
     huespedes: mockHuespedes.filter(h => h.id_reserva === 1),
-    precio_total: 450000,
+    precio_total: 450000, // Mantener por compatibilidad
+    total_reserva: 450000, // Monto total de la reserva
+    total_pagado: 450000, // Completamente pagado
+    total_pendiente: 0, // Sin pendientes
     estado: 'confirmada',
     fecha_creacion: '2024-08-01',
     observaciones: 'Llegada tarde, después de las 18:00',
@@ -192,7 +195,10 @@ const mockReservas: IReservaTableData[] = [
     fecha_salida: '2024-08-25',
     numero_huespedes: 4,
     huespedes: mockHuespedes.filter(h => h.id_reserva === 2),
-    precio_total: 1250000,
+    precio_total: 1250000, // Mantener por compatibilidad
+    total_reserva: 1250000, // Monto total de la reserva
+    total_pagado: 0, // Sin abonos
+    total_pendiente: 1250000, // Todo pendiente
     estado: 'pendiente',
     fecha_creacion: '2024-08-05',
     observaciones: '',
@@ -213,7 +219,10 @@ const mockReservas: IReservaTableData[] = [
     fecha_salida: '2024-08-12',
     numero_huespedes: 1,
     huespedes: mockHuespedes.filter(h => h.id_reserva === 3),
-    precio_total: 280000,
+    precio_total: 280000, // Mantener por compatibilidad
+    total_reserva: 280000, // Monto total de la reserva
+    total_pagado: 280000, // Completamente pagado
+    total_pendiente: 0, // Sin pendientes
     estado: 'completada',
     fecha_creacion: '2024-07-25',
     observaciones: 'Cliente frecuente',
@@ -234,7 +243,10 @@ const mockReservas: IReservaTableData[] = [
     fecha_salida: '2024-08-14',
     numero_huespedes: 2,
     huespedes: mockHuespedes.filter(h => h.id_reserva === 4),
-    precio_total: 320000,
+    precio_total: 320000, // Mantener por compatibilidad
+    total_reserva: 320000, // Monto total de la reserva
+    total_pagado: 150000, // Abono parcial
+    total_pendiente: 170000, // Monto pendiente
     estado: 'en_proceso',
     fecha_creacion: '2024-08-02',
     observaciones: 'Necesita cuna para bebé',
@@ -255,7 +267,10 @@ const mockReservas: IReservaTableData[] = [
     fecha_salida: '2024-08-27',
     numero_huespedes: 3,
     huespedes: mockHuespedes.filter(h => h.id_reserva === 5),
-    precio_total: 300000,
+    precio_total: 300000, // Mantener por compatibilidad
+    total_reserva: 300000, // Monto total de la reserva
+    total_pagado: 100000, // Abono parcial
+    total_pendiente: 200000, // Monto pendiente (pero está cancelada)
     estado: 'cancelada',
     fecha_creacion: '2024-08-03',
     observaciones: 'Cancelada por el cliente',

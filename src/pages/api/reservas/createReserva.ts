@@ -28,7 +28,10 @@ interface ExternalCreateReservaResponse {
     es_principal: boolean;
     id_reserva: number;
   }>;
-  precio_total: number;
+  precio_total: number; // Mantener por compatibilidad
+  total_reserva: number; // Monto total de la reserva
+  total_pagado: number; // Monto total pagado/abonado
+  total_pendiente: number; // Monto pendiente por pagar
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   fecha_creacion: string;
   observaciones?: string;
@@ -147,6 +150,9 @@ const mapReservaFromAPI = (reservaAPI: ExternalCreateReservaResponse): IReservaT
     numero_huespedes: reservaAPI.numero_huespedes,
     huespedes: reservaAPI.huespedes,
     precio_total: reservaAPI.precio_total,
+    total_reserva: reservaAPI.total_reserva,
+    total_pagado: reservaAPI.total_pagado,
+    total_pendiente: reservaAPI.total_pendiente,
     estado: reservaAPI.estado,
     fecha_creacion: reservaAPI.fecha_creacion,
     observaciones: reservaAPI.observaciones || '',
@@ -194,6 +200,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fecha_entrada: reservaData.fecha_entrada,
       fecha_salida: reservaData.fecha_salida,
       precio_total: reservaData.precio_total,
+      total_reserva: reservaData.total_reserva,
+      total_pagado: reservaData.total_pagado,
       estado: reservaData.estado,
       id_empresa: reservaData.id_empresa
     });

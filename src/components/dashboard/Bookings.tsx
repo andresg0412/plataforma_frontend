@@ -207,6 +207,8 @@ const Bookings: React.FC = () => {
             es_principal: huesped.es_principal,
           })),
           precio_total: reservaToEdit.precio_total,
+          total_reserva: reservaToEdit.total_reserva || reservaToEdit.precio_total,
+          total_pagado: reservaToEdit.total_pagado || 0,
           estado: reservaToEdit.estado,
           observaciones: reservaToEdit.observaciones || '',
           id_empresa: reservaToEdit.id_empresa

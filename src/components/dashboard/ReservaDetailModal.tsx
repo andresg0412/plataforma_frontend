@@ -136,7 +136,7 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
                 Todos los Huéspedes ({reserva.huespedes.length})
               </h4>
               <div className="space-y-3">
-                {reserva.huespedes.map((huesped, index) => (
+                {reserva.huespedes.map((huesped) => (
                   <div 
                     key={huesped.id} 
                     className={`p-3 rounded-md border ${
@@ -225,7 +225,28 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
               <div>
                 <label className="text-sm font-medium text-gray-600">Total de la Reserva</label>
                 <p className="text-gray-900 font-bold text-lg text-tourism-teal">
-                  {formatCurrency(reserva.precio_total)}
+                  {formatCurrency(reserva.total_reserva || reserva.precio_total)}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Total Pagado/Abonado</label>
+                <p className="text-gray-900 font-medium text-green-600">
+                  {formatCurrency(reserva.total_pagado || 0)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {reserva.total_pagado === 0 ? 'Sin abonos' : 
+                   reserva.total_pagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
+                   'Abono parcial'}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Total Pendiente</label>
+                <p className={`font-medium ${
+                  (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === 0 ? 'text-green-600' :
+                  (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
+                  'text-orange-600'
+                }`}>
+                  {formatCurrency(reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0)))}
                 </p>
               </div>
             </div>
