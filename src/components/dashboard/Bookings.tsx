@@ -5,6 +5,7 @@ import CreateReservaModal from './CreateReservaModal';
 import CreateReservaButton from './CreateReservaButton';
 import ReservaDetailModal from './ReservaDetailModal';
 import HuespedesListModal from './HuespedesListModal';
+import PagosModal from './PagosModal';
 import SuccessModal from './SuccessModal';
 import ConfirmModal from './ConfirmModal';
 import { useAuth } from '../../auth/AuthContext';
@@ -22,11 +23,13 @@ const Bookings: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [huespedesModalOpen, setHuespedesModalOpen] = useState(false);
+  const [pagosModalOpen, setPagosModalOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [reservaToEdit, setReservaToEdit] = useState<IReservaTableData | null>(null);
   const [reservaToDelete, setReservaToDelete] = useState<IReservaTableData | null>(null);
   const [reservaToView, setReservaToView] = useState<IReservaTableData | null>(null);
   const [reservaToViewHuespedes, setReservaToViewHuespedes] = useState<IReservaTableData | null>(null);
+  const [reservaToViewPagos, setReservaToViewPagos] = useState<IReservaTableData | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -145,6 +148,11 @@ const Bookings: React.FC = () => {
     setHuespedesModalOpen(true);
   };
 
+  const handleViewPagos = (reserva: IReservaTableData) => {
+    setReservaToViewPagos(reserva);
+    setPagosModalOpen(true);
+  };
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
@@ -173,6 +181,7 @@ const Bookings: React.FC = () => {
           onDelete={handleDelete}
           onViewDetail={handleViewDetail}
           onViewHuespedes={handleViewHuespedes}
+          onViewPagos={handleViewPagos}
           canEdit={canEdit}
           canDelete={canDelete}
         />
@@ -233,6 +242,25 @@ const Bookings: React.FC = () => {
         }}
         huespedes={reservaToViewHuespedes?.huespedes || []}
         codigoReserva={reservaToViewHuespedes?.codigo_reserva || ''}
+      />
+
+      <PagosModal
+        open={pagosModalOpen}
+        onClose={() => {
+          setPagosModalOpen(false);
+          setReservaToViewPagos(null);
+        }}
+        reserva={reservaToViewPagos}
+        onPagoCreated={(pago) => {
+          // Aquí podrías actualizar el estado de las reservas si necesitas
+          // reflejar los cambios en tiempo real
+          console.log('Pago creado:', pago);
+        }}
+        onPagoDeleted={(pagoId) => {
+          // Aquí podrías actualizar el estado de las reservas si necesitas
+          // reflejar los cambios en tiempo real
+          console.log('Pago eliminado:', pagoId);
+        }}
       />
       
       <ConfirmModal

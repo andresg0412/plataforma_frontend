@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Eye, Users } from 'lucide-react';
+import { Edit2, Trash2, Eye, Users, CreditCard } from 'lucide-react';
 import { IReservaTableData } from '../../interfaces/Reserva';
 
 interface ReservasTableProps {
@@ -8,6 +8,7 @@ interface ReservasTableProps {
   onDelete: (reserva: IReservaTableData) => void;
   onViewDetail: (reserva: IReservaTableData) => void;
   onViewHuespedes: (reserva: IReservaTableData) => void;
+  onViewPagos: (reserva: IReservaTableData) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -18,6 +19,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
   onDelete,
   onViewDetail,
   onViewHuespedes,
+  onViewPagos,
   canEdit = true,
   canDelete = true
 }) => {
@@ -198,6 +200,13 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                       title="Ver detalles de la reserva"
                     >
                       <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => onViewPagos(reserva)}
+                      className="inline-flex items-center p-2 rounded-md text-tourism-teal hover:bg-tourism-teal/10 hover:text-tourism-teal transition-colors"
+                      title="Gestionar pagos"
+                    >
+                      <CreditCard className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => onEdit(reserva)}
