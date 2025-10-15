@@ -1,5 +1,10 @@
-import { apiFetch } from './apiFetch';
+/**
+ * API de Movimientos por Inmueble - Conectado con Backend Externo
+ * Este archivo conecta con la API externa a través de las APIs internas de Next.js
+ */
+
 import { IMovimiento } from '../interfaces/Movimiento';
+import { apiFetch } from './apiFetch';
 
 // Interfaz para la respuesta del API de movimientos por inmueble
 interface MovimientosInmuebleResponse {
@@ -15,6 +20,7 @@ interface MovimientosInmuebleResponse {
 
 /**
  * Obtiene los movimientos de un inmueble para una fecha específica
+ * Conectado a la API externa a través de API interna
  */
 export const getMovimientosInmuebleApi = async (
   idInmueble: string, 

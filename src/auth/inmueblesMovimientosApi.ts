@@ -1,97 +1,87 @@
-import { IInmueble, IInmuebleApiResponse } from '../interfaces/Inmueble';
+/**
+ * API de Inmuebles para Movimientos - Conectado con Backend Externo
+ * Este archivo conecta con la API externa a través de las APIs internas de Next.js
+ */
 
-// Mock data para inmuebles (para usar en el modal de movimientos)
-const mockInmuebles: IInmueble[] = [
-  {
-    id: '1',
-    id_inmueble: 'INM001',
-    nombre: 'Apartamento Centro 101',
-    direccion: 'Carrera 7 # 26-85',
-    edificio: 'Torre Central',
-    apartamento: '101',
-    comision: 10,
-    id_propietario: '1',
-    tipo: 'apartamento',
-    estado: 'disponible',
-    precio: 250000,
-    precio_limpieza: 50000,
-    id_producto_sigo: 'SIGO001',
-    descripcion: 'Apartamento en el centro de la ciudad',
-    capacidad_maxima: 4,
-    habitaciones: 2,
-    banos: 2,
-    area: 65,
-    tiene_cocina: true,
-    id_empresa: '1',
-    nombre_empresa: 'WaiwaHost',
-    fecha_creacion: '2025-01-01',
-    fecha_actualizacion: '2025-01-01'
-  },
-  {
-    id: '2',
-    id_inmueble: 'INM002',
-    nombre: 'Casa Zona Rosa',
-    direccion: 'Calle 85 # 15-23',
-    edificio: '',
-    apartamento: '',
-    comision: 12,
-    id_propietario: '2',
-    tipo: 'casa',
-    estado: 'disponible',
-    precio: 350000,
-    precio_limpieza: 75000,
-    id_producto_sigo: 'SIGO002',
-    descripcion: 'Casa completa en zona rosa',
-    capacidad_maxima: 6,
-    habitaciones: 3,
-    banos: 3,
-    area: 120,
-    tiene_cocina: true,
-    id_empresa: '1',
-    nombre_empresa: 'WaiwaHost',
-    fecha_creacion: '2025-01-01',
-    fecha_actualizacion: '2025-01-01'
-  },
-  {
-    id: '3',
-    id_inmueble: 'INM003',
-    nombre: 'Studio Chapinero 205',
-    direccion: 'Carrera 13 # 63-42',
-    edificio: 'Edificio Norte',
-    apartamento: '205',
-    comision: 8,
-    id_propietario: '3',
-    tipo: 'studio',
-    estado: 'disponible',
-    precio: 180000,
-    precio_limpieza: 40000,
-    id_producto_sigo: 'SIGO003',
-    descripcion: 'Studio moderno en Chapinero',
-    capacidad_maxima: 2,
-    habitaciones: 1,
-    banos: 1,
-    area: 35,
-    tiene_cocina: true,
-    id_empresa: '1',
-    nombre_empresa: 'WaiwaHost',
-    fecha_creacion: '2025-01-01',
-    fecha_actualizacion: '2025-01-01'
-  }
-];
+import { IInmuebleApiResponse } from '../interfaces/Inmueble';
+import { apiFetch } from './apiFetch';
 
-// Simular delay de red
-const delay = (ms: number = 300): Promise<void> => 
-  new Promise(resolve => setTimeout(resolve, ms));
+// Interfaz simplificada para selector de inmuebles
+interface IInmuebleSelector {
+  id: string;
+  nombre: string;
+  direccion: string;
+  estado: string;
+}
 
+interface InmueblesSelectorResponse {
+  success: boolean;
+  data?: IInmuebleSelector[];
+  message: string;
+  error?: string;
+}
+
+// Función para mapear IInmuebleSelector a IInmueble simplificado para compatibilidad
+const mapSelectorToInmueble = (selector: IInmuebleSelector): any => ({
+  id: selector.id,
+  id_inmueble: selector.id,
+  nombre: selector.nombre,
+  direccion: selector.direccion,
+  estado: selector.estado,
+  // Campos mínimos necesarios para formularios
+  edificio: '',
+  apartamento: '',
+  comision: 0,
+  id_propietario: '1',
+  tipo: 'apartamento',
+  precio: 0,
+  precio_limpieza: 0,
+  id_producto_sigo: '',
+  descripcion: '',
+  capacidad_maxima: 1,
+  habitaciones: 1,
+  banos: 1,
+  area: 0,
+  tiene_cocina: true,
+  id_empresa: '1',
+  nombre_empresa: 'WaiwaHost',
+  fecha_creacion: '2025-01-01',
+  fecha_actualizacion: '2025-01-01'
+});
+
+/**
+ * Obtiene inmuebles para usar en formularios de movimientos
+ * Conectado a la API externa a través de API interna
+ */
 export const getInmueblesForMovimientos = async (): Promise<IInmuebleApiResponse> => {
-  await delay();
   try {
+    console.log('🔄 Obteniendo inmuebles para formularios');
+    
+    const response: InmueblesSelectorResponse = await apiFetch('/api/inmuebles/getInmueblesSelector', {
+      method: 'GET',
+    });
+    
+    if (!response.success || !response.data) {
+      return {
+        success: false,
+        message: response.message || 'Error al obtener inmuebles',
+        error: response.error
+      };
+    }
+
+    // Mapear los datos del selector a formato completo para compatibilidad
+    const inmuebles = response.data.map(mapSelectorToInmueble);
+    
+    console.log('✅ Inmuebles para formularios obtenidos exitosamente:', inmuebles.length);
+    
     return {
       success: true,
-      data: mockInmuebles,
+      data: inmuebles,
       message: 'Inmuebles obtenidos exitosamente'
     };
+    
   } catch (error) {
+    console.error('❌ Error en getInmueblesForMovimientos:', error);
     return {
       success: false,
       message: 'Error al obtener inmuebles',
