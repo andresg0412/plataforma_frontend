@@ -4,13 +4,13 @@
  */
 
 // URL base de la API externa - debe configurarse según el ambiente
-export const EXTERNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || 'http://localhost:3001/api';
+export const EXTERNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || 'http://localhost:3001';
 
 /**
  * URLs de endpoints externos organizados por módulo
  */
 export const EXTERNAL_API_ENDPOINTS = {
-  // Endpoints de Movimientos
+  // Endpoints de Movimientos Generales
   MOVIMIENTOS: {
     BY_FECHA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/movimientos/fecha/${fecha}`,
     BY_INMUEBLE: `${EXTERNAL_API_BASE_URL}/movimientos/inmueble`,
@@ -19,6 +19,20 @@ export const EXTERNAL_API_ENDPOINTS = {
     UPDATE: (id: string) => `${EXTERNAL_API_BASE_URL}/movimientos/${id}`,
     DELETE: (id: string) => `${EXTERNAL_API_BASE_URL}/movimientos/${id}`,
     BY_ID: (id: string) => `${EXTERNAL_API_BASE_URL}/movimientos/${id}`,
+  },
+  
+  // Endpoints específicos para Ingresos (filtrados del sistema de movimientos)
+  INGRESOS: {
+    BY_FECHA_EMPRESA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/movimientos/fecha/${fecha}`,
+    BY_FECHA_INMUEBLE: `${EXTERNAL_API_BASE_URL}/movimientos/inmueble`,
+    RESUMEN_FECHA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/movimientos/resumen/${fecha}`,
+  },
+  
+  // Endpoints específicos para Egresos (filtrados del sistema de movimientos)
+  EGRESOS: {
+    BY_FECHA_EMPRESA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/movimientos/fecha/${fecha}`,
+    BY_FECHA_INMUEBLE: `${EXTERNAL_API_BASE_URL}/movimientos/inmueble`,
+    RESUMEN_FECHA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/movimientos/resumen/${fecha}`,
   },
   
   // Endpoints de Inmuebles

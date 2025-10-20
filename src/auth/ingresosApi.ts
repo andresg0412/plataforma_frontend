@@ -1,329 +1,322 @@
-import { IIngreso, IIngresoApiResponse, IResumenIngresos, IFiltrosIngresos } from '../interfaces/Ingreso';
-import { IMovimiento } from '../interfaces/Movimiento';
-import { IPago } from '../interfaces/Pago';
+/**
+ * API para Ingresos - Integración con API Externa
+ * Sigue el mismo patrón que movimientosExternalApi.ts
+ */
 
-// Mock data para ingresos (combinando movimientos tipo ingreso y pagos)
-const mockMovimientos: IMovimiento[] = [
-  {
-    id: '1',
-    fecha: '2025-10-08',
-    tipo: 'ingreso',
-    concepto: 'reserva',
-    descripcion: 'Pago reserva - Check-in',
-    monto: 250000,
-    id_inmueble: '1',
-    nombre_inmueble: 'Apartamento Centro 101',
-    id_reserva: '1',
-    codigo_reserva: 'RSV-2025-001',
-    metodo_pago: 'transferencia',
-    comprobante: 'TRF-001234',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-08T08:00:00Z',
-    fecha_actualizacion: '2025-10-08T08:00:00Z'
-  },
-  {
-    id: '2',
-    fecha: '2025-10-08',
-    tipo: 'ingreso',
-    concepto: 'limpieza',
-    descripcion: 'Cargo por limpieza adicional',
-    monto: 50000,
-    id_inmueble: '1',
-    nombre_inmueble: 'Apartamento Centro 101',
-    id_reserva: '1',
-    codigo_reserva: 'RSV-2025-001',
-    metodo_pago: 'efectivo',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-08T10:30:00Z',
-    fecha_actualizacion: '2025-10-08T10:30:00Z'
-  },
-  {
-    id: '4',
-    fecha: '2025-10-08',
-    tipo: 'ingreso',
-    concepto: 'deposito_garantia',
-    descripcion: 'Depósito de garantía',
-    monto: 100000,
-    id_inmueble: '3',
-    nombre_inmueble: 'Studio Chapinero 205',
-    id_reserva: '2',
-    codigo_reserva: 'RSV-2025-002',
-    metodo_pago: 'tarjeta',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-08T16:45:00Z',
-    fecha_actualizacion: '2025-10-08T16:45:00Z'
-  },
-  {
-    id: '6',
-    fecha: '2025-10-08',
-    tipo: 'ingreso',
-    concepto: 'reserva',
-    descripcion: 'Pago reserva - Check-in',
-    monto: 180000,
-    id_inmueble: '2',
-    nombre_inmueble: 'Casa Zona Rosa',
-    id_reserva: '3',
-    codigo_reserva: 'RSV-2025-003',
-    metodo_pago: 'efectivo',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-08T11:30:00Z',
-    fecha_actualizacion: '2025-10-08T11:30:00Z'
-  },
-  {
-    id: '7',
-    fecha: '2025-10-08',
-    tipo: 'ingreso',
-    concepto: 'servicios_adicionales',
-    descripcion: 'Servicio de lavandería',
-    monto: 25000,
-    id_inmueble: '2',
-    nombre_inmueble: 'Casa Zona Rosa',
-    metodo_pago: 'transferencia',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-08T14:00:00Z',
-    fecha_actualizacion: '2025-10-08T14:00:00Z'
-  },
-  {
-    id: '8',
-    fecha: '2025-10-07',
-    tipo: 'ingreso',
-    concepto: 'reserva',
-    descripcion: 'Pago adelantado reserva',
-    monto: 320000,
-    id_inmueble: '1',
-    nombre_inmueble: 'Apartamento Centro 101',
-    id_reserva: '4',
-    codigo_reserva: 'RSV-2025-004',
-    metodo_pago: 'transferencia',
-    comprobante: 'TRF-001235',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-07T09:15:00Z',
-    fecha_actualizacion: '2025-10-07T09:15:00Z'
-  },
-  {
-    id: '9',
-    fecha: '2025-10-07',
-    tipo: 'ingreso',
-    concepto: 'multa',
-    descripcion: 'Multa por daños menores',
-    monto: 75000,
-    id_inmueble: '3',
-    nombre_inmueble: 'Studio Chapinero 205',
-    metodo_pago: 'efectivo',
-    id_empresa: '1',
-    fecha_creacion: '2025-10-07T18:30:00Z',
-    fecha_actualizacion: '2025-10-07T18:30:00Z'
+import { IIngreso, IIngresoApiResponse, IResumenIngresos, IResumenIngresosApiResponse, IFiltrosIngresos, IInmuebleFiltro, IInmuebleFiltroApiResponse } from '../interfaces/Ingreso';
+import { externalApiFetch, getEmpresaIdFromContext, buildQueryParams } from './externalApiFetch';
+import { EXTERNAL_API_ENDPOINTS } from './externalApiConfig';
+
+// Interfaces específicas para respuestas de la API externa
+interface ExternalMovimientosResponse {
+  isError: boolean;
+  data: {
+    id: string;
+    fecha: string;
+    tipo: 'ingreso' | 'egreso';
+    concepto: string;
+    descripcion: string;
+    monto: number;
+    id_inmueble: string;
+    nombre_inmueble?: string;
+    id_reserva?: string;
+    codigo_reserva?: string;
+    metodo_pago: 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';
+    comprobante?: string;
+    id_empresa: string;
+    fecha_creacion: string;
+    fecha_actualizacion: string;
+  }[];
+  code: number;
+  timestamp: string;
+  message?: string;
+  error?: string;
+}
+
+interface ExternalResumenResponse {
+  isError: boolean;
+  data: {
+    fecha: string;
+    total_ingresos: number;
+    total_egresos: number;
+    balance: number;
+    cantidad_movimientos: number;
+  };
+  code: number;
+  timestamp: string;
+  message?: string;
+  error?: string;
+}
+
+interface ExternalMovimientosInmuebleResponse {
+  isError: boolean;
+  data: {
+    ingresos: number;
+    egresos: number;
+    movimientos: ExternalMovimientosResponse['data'];
+  };
+  code: number;
+  timestamp: string;
+  message?: string;
+  error?: string;
+}
+
+interface ExternalInmueblesResponse {
+  isError: boolean;
+  data: {
+    id: string;
+    nombre: string;
+    direccion: string;
+    estado: string;
+  }[];
+  code: number;
+  timestamp: string;
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Obtiene todos los ingresos por filtros desde la API externa
+ */
+export const getIngresosByFiltros = async (filtros: IFiltrosIngresos): Promise<IIngresoApiResponse> => {
+  try {
+    console.log('🔄 Obteniendo ingresos desde API externa:', filtros);
+    
+    const empresaId = getEmpresaIdFromContext();
+    
+    // Si hay filtro por inmueble, usar endpoint específico
+    if (filtros.id_inmueble) {
+      const queryParams = buildQueryParams({
+        id_inmueble: filtros.id_inmueble,
+        fecha: filtros.fecha
+      });
+      
+      const url = `${EXTERNAL_API_ENDPOINTS.MOVIMIENTOS.BY_INMUEBLE}${queryParams}`;
+      const response: ExternalMovimientosInmuebleResponse = await externalApiFetch(url, {
+        method: 'GET',
+      });
+      
+      // Filtrar solo ingresos y transformar al formato esperado
+      const ingresos = response.data.movimientos
+        .filter(mov => mov.tipo === 'ingreso')
+        .map(transformMovimientoToIngreso)
+        .sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
+      
+      console.log('✅ Ingresos por inmueble obtenidos exitosamente:', ingresos.length);
+      return {
+        success: true,
+        data: ingresos,
+        message: 'Ingresos obtenidos exitosamente desde API externa'
+      };
+      
+    } else {
+      // Obtener todos los movimientos de la fecha y filtrar ingresos
+      const queryParams = buildQueryParams({ empresa_id: empresaId });
+      const url = `${EXTERNAL_API_ENDPOINTS.MOVIMIENTOS.BY_FECHA(filtros.fecha)}${queryParams}`;
+      
+      const response: ExternalMovimientosResponse = await externalApiFetch(url, {
+        method: 'GET',
+      });
+      
+      // Filtrar solo ingresos y transformar al formato esperado
+      const ingresos = response.data
+        .filter(mov => mov.tipo === 'ingreso')
+        .map(transformMovimientoToIngreso)
+        .sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
+      
+      console.log('✅ Ingresos obtenidos exitosamente:', ingresos.length);
+      return {
+        success: true,
+        data: ingresos,
+        message: 'Ingresos obtenidos exitosamente desde API externa'
+      };
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al obtener ingresos desde API externa:', error);
+    return {
+      success: false,
+      data: [],
+      message: error instanceof Error ? error.message : 'Error al conectar con el servidor'
+    };
   }
-];
+};
 
-const mockPagos: IPago[] = [
-  {
-    id: 1,
-    id_reserva: 1,
-    codigo_reserva: 'RSV-2025-001',
-    monto: 150000,
-    fecha_pago: '2025-10-08',
-    metodo_pago: 'transferencia',
-    concepto: 'Pago parcial reserva',
-    descripcion: 'Segundo pago de la reserva',
-    comprobante: 'TRF-001236',
-    id_empresa: 1,
-    fecha_creacion: '2025-10-08T12:00:00Z',
-    fecha_actualizacion: '2025-10-08T12:00:00Z'
-  },
-  {
-    id: 2,
-    id_reserva: 2,
-    codigo_reserva: 'RSV-2025-002',
-    monto: 200000,
-    fecha_pago: '2025-10-08',
-    metodo_pago: 'tarjeta',
-    concepto: 'Pago total reserva',
-    descripcion: 'Pago completo de la estadía',
-    id_empresa: 1,
-    fecha_creacion: '2025-10-08T15:30:00Z',
-    fecha_actualizacion: '2025-10-08T15:30:00Z'
-  },
-  {
-    id: 3,
-    id_reserva: 3,
-    codigo_reserva: 'RSV-2025-003',
-    monto: 95000,
-    fecha_pago: '2025-10-07',
-    metodo_pago: 'efectivo',
-    concepto: 'Pago adicional',
-    descripcion: 'Extensión de estadía',
-    id_empresa: 1,
-    fecha_creacion: '2025-10-07T20:00:00Z',
-    fecha_actualizacion: '2025-10-07T20:00:00Z'
+/**
+ * Obtiene el resumen de ingresos desde la API externa
+ */
+export const getResumenIngresos = async (filtros: IFiltrosIngresos): Promise<IResumenIngresosApiResponse> => {
+  try {
+    console.log('🔄 Obteniendo resumen de ingresos desde API externa:', filtros);
+    
+    const empresaId = getEmpresaIdFromContext();
+    
+    if (filtros.id_inmueble) {
+      // Para un inmueble específico, obtener los movimientos detallados
+      const queryParams = buildQueryParams({
+        id_inmueble: filtros.id_inmueble,
+        fecha: filtros.fecha
+      });
+      
+      const url = `${EXTERNAL_API_ENDPOINTS.MOVIMIENTOS.BY_INMUEBLE}${queryParams}`;
+      const response: ExternalMovimientosInmuebleResponse = await externalApiFetch(url, {
+        method: 'GET',
+      });
+      
+      const movimientosIngreso = response.data.movimientos.filter(mov => mov.tipo === 'ingreso');
+      
+      const resumen: IResumenIngresos = {
+        fecha: filtros.fecha,
+        total_ingresos: response.data.ingresos,
+        cantidad_ingresos: movimientosIngreso.length,
+        promedio_ingreso: movimientosIngreso.length > 0 ? response.data.ingresos / movimientosIngreso.length : 0,
+        inmueble_seleccionado: filtros.id_inmueble,
+        ingresos_por_inmueble: []
+      };
+      
+      console.log('✅ Resumen de ingresos por inmueble obtenido exitosamente');
+      return {
+        success: true,
+        data: resumen,
+        message: 'Resumen de ingresos obtenido exitosamente desde API externa'
+      };
+      
+    } else {
+      // Para todos los inmuebles, obtener el resumen general
+      const queryParams = buildQueryParams({ empresa_id: empresaId });
+      const url = `${EXTERNAL_API_ENDPOINTS.MOVIMIENTOS.RESUMEN(filtros.fecha)}${queryParams}`;
+      
+      const response: ExternalResumenResponse = await externalApiFetch(url, {
+        method: 'GET',
+      });
+      
+      // También obtener movimientos detallados para calcular promedio
+      const movimientosUrl = `${EXTERNAL_API_ENDPOINTS.MOVIMIENTOS.BY_FECHA(filtros.fecha)}${queryParams}`;
+      const movimientosResponse: ExternalMovimientosResponse = await externalApiFetch(movimientosUrl, {
+        method: 'GET',
+      });
+      
+      const movimientosIngreso = movimientosResponse.data.filter(mov => mov.tipo === 'ingreso');
+      
+      const resumen: IResumenIngresos = {
+        fecha: filtros.fecha,
+        total_ingresos: response.data.total_ingresos,
+        cantidad_ingresos: movimientosIngreso.length,
+        promedio_ingreso: movimientosIngreso.length > 0 ? response.data.total_ingresos / movimientosIngreso.length : 0,
+        inmueble_seleccionado: null,
+        ingresos_por_inmueble: calcularIngresosPorInmueble(movimientosIngreso)
+      };
+      
+      console.log('✅ Resumen general de ingresos obtenido exitosamente');
+      return {
+        success: true,
+        data: resumen,
+        message: 'Resumen de ingresos obtenido exitosamente desde API externa'
+      };
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al obtener resumen de ingresos desde API externa:', error);
+    return {
+      success: false,
+      data: null,
+      message: error instanceof Error ? error.message : 'Error al conectar con el servidor'
+    };
   }
-];
+};
 
-// Mock data para inmuebles (simplificado para el selector)
-const mockInmuebles = [
-  { id: '1', nombre: 'Apartamento Centro 101' },
-  { id: '2', nombre: 'Casa Zona Rosa' },
-  { id: '3', nombre: 'Studio Chapinero 205' }
-];
+/**
+ * Obtiene la lista de inmuebles para el filtro desde la API externa
+ */
+export const getInmueblesParaFiltro = async (): Promise<IInmuebleFiltroApiResponse> => {
+  try {
+    console.log('🔄 Obteniendo inmuebles para filtro desde API externa...');
+    
+    const empresaId = getEmpresaIdFromContext();
+    const queryParams = buildQueryParams({ empresa_id: empresaId });
+    const url = `${EXTERNAL_API_ENDPOINTS.INMUEBLES.SELECTOR}${queryParams}`;
+    
+    const response: ExternalInmueblesResponse = await externalApiFetch(url, {
+      method: 'GET',
+    });
+    
+    // Transformar al formato esperado por el frontend
+    const inmuebles: IInmuebleFiltro[] = response.data.map(inmueble => ({
+      id: inmueble.id,
+      nombre: inmueble.nombre,
+      direccion: inmueble.direccion
+    }));
+    
+    console.log('✅ Inmuebles para filtro obtenidos exitosamente:', inmuebles.length);
+    return {
+      success: true,
+      data: inmuebles,
+      message: 'Inmuebles obtenidos exitosamente desde API externa'
+    };
+    
+  } catch (error) {
+    console.error('❌ Error al obtener inmuebles desde API externa:', error);
+    return {
+      success: false,
+      data: [],
+      message: error instanceof Error ? error.message : 'Error al conectar con el servidor'
+    };
+  }
+};
 
-// Función para convertir movimiento a ingreso
-const convertMovimientoToIngreso = (movimiento: IMovimiento): IIngreso => ({
-  id: movimiento.id,
-  fecha: movimiento.fecha,
-  concepto: movimiento.concepto,
-  descripcion: movimiento.descripcion,
-  monto: movimiento.monto,
-  id_inmueble: movimiento.id_inmueble,
-  nombre_inmueble: movimiento.nombre_inmueble,
-  id_reserva: movimiento.id_reserva,
-  codigo_reserva: movimiento.codigo_reserva,
-  metodo_pago: movimiento.metodo_pago,
-  comprobante: movimiento.comprobante,
-  tipo_ingreso: 'movimiento',
-  id_empresa: movimiento.id_empresa,
-  fecha_creacion: movimiento.fecha_creacion,
-  fecha_actualizacion: movimiento.fecha_actualizacion
-});
-
-// Función para convertir pago a ingreso
-const convertPagoToIngreso = (pago: IPago): IIngreso => {
-  const inmueble = mockInmuebles.find(inm => inm.id === '1'); // Mock: asociar pagos al inmueble 1 por defecto
+/**
+ * Transforma un movimiento de la API externa al formato de ingreso del frontend
+ */
+const transformMovimientoToIngreso = (movimiento: ExternalMovimientosResponse['data'][0]): IIngreso => {
   return {
-    id: `pago_${pago.id}`,
-    fecha: pago.fecha_pago,
-    concepto: pago.concepto || 'pago_reserva',
-    descripcion: pago.descripcion || 'Pago de reserva',
-    monto: pago.monto,
-    id_inmueble: '1', // Mock: todos los pagos van al inmueble 1
-    nombre_inmueble: inmueble?.nombre || 'Apartamento Centro 101',
-    id_reserva: pago.id_reserva.toString(),
-    codigo_reserva: pago.codigo_reserva,
-    metodo_pago: pago.metodo_pago,
-    comprobante: pago.comprobante,
-    tipo_ingreso: 'pago',
-    id_empresa: pago.id_empresa.toString(),
-    fecha_creacion: pago.fecha_creacion,
-    fecha_actualizacion: pago.fecha_actualizacion
+    id: movimiento.id,
+    fecha: movimiento.fecha,
+    concepto: movimiento.concepto,
+    descripcion: movimiento.descripcion,
+    monto: movimiento.monto,
+    id_inmueble: movimiento.id_inmueble,
+    nombre_inmueble: movimiento.nombre_inmueble || 'Inmueble no especificado',
+    id_reserva: movimiento.id_reserva,
+    codigo_reserva: movimiento.codigo_reserva,
+    metodo_pago: movimiento.metodo_pago,
+    comprobante: movimiento.comprobante,
+    tipo_ingreso: 'movimiento' as const, // Los de API externa son siempre movimientos
+    id_empresa: movimiento.id_empresa,
+    fecha_creacion: movimiento.fecha_creacion,
+    fecha_actualizacion: movimiento.fecha_actualizacion
   };
 };
 
-// Simular delay de red
-const delay = (ms: number = 500): Promise<void> => 
-  new Promise(resolve => setTimeout(resolve, ms));
-
-// API functions
-export const getIngresosByFiltros = async (filtros: IFiltrosIngresos): Promise<IIngresoApiResponse> => {
-  await delay();
-  try {
-    // Filtrar movimientos tipo ingreso por fecha
-    const movimientosIngreso = mockMovimientos
-      .filter(mov => mov.tipo === 'ingreso' && mov.fecha === filtros.fecha)
-      .map(convertMovimientoToIngreso);
-
-    // Filtrar pagos por fecha
-    const pagosIngreso = mockPagos
-      .filter(pago => pago.fecha_pago === filtros.fecha)
-      .map(convertPagoToIngreso);
-
-    // Combinar ambos tipos de ingresos
-    let todosLosIngresos = [...movimientosIngreso, ...pagosIngreso];
-
-    // Filtrar por inmueble si se especifica
-    if (filtros.id_inmueble) {
-      todosLosIngresos = todosLosIngresos.filter(ingreso => ingreso.id_inmueble === filtros.id_inmueble);
-    }
-
-    // Ordenar por fecha de creación (más recientes primero)
-    todosLosIngresos.sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
-
-    return {
-      success: true,
-      data: todosLosIngresos,
-      message: 'Ingresos obtenidos exitosamente'
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Error al obtener ingresos',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    };
-  }
-};
-
-export const getResumenIngresos = async (fecha: string, id_inmueble?: string): Promise<{ success: boolean; data?: IResumenIngresos; message: string; error?: string }> => {
-  await delay();
-  try {
-    const filtros: IFiltrosIngresos = { fecha, id_inmueble };
-    const response = await getIngresosByFiltros(filtros);
-    
-    if (!response.success || !Array.isArray(response.data)) {
-      return {
-        success: false,
-        message: 'Error al obtener datos para el resumen'
+/**
+ * Calcula el resumen de ingresos por inmueble
+ */
+const calcularIngresosPorInmueble = (movimientos: ExternalMovimientosResponse['data']): IResumenIngresos['ingresos_por_inmueble'] => {
+  const agrupados = movimientos.reduce((acc, mov) => {
+    const key = mov.id_inmueble;
+    if (!acc[key]) {
+      acc[key] = {
+        id_inmueble: mov.id_inmueble,
+        nombre_inmueble: mov.nombre_inmueble || 'Inmueble no especificado',
+        total_ingresos: 0,
+        cantidad_ingresos: 0
       };
     }
-
-    const ingresos = response.data;
-    const total_ingresos = ingresos.reduce((sum, ingreso) => sum + ingreso.monto, 0);
-
-    // Agrupar por inmueble
-    const ingresosPorInmuebleMap = new Map<string, { total: number; cantidad: number; nombre: string }>();
-    
-    ingresos.forEach(ingreso => {
-      const existing = ingresosPorInmuebleMap.get(ingreso.id_inmueble);
-      if (existing) {
-        existing.total += ingreso.monto;
-        existing.cantidad += 1;
-      } else {
-        ingresosPorInmuebleMap.set(ingreso.id_inmueble, {
-          total: ingreso.monto,
-          cantidad: 1,
-          nombre: ingreso.nombre_inmueble
-        });
-      }
-    });
-
-    const ingresos_por_inmueble = Array.from(ingresosPorInmuebleMap.entries()).map(([id_inmueble, data]) => ({
-      id_inmueble,
-      nombre_inmueble: data.nombre,
-      total_ingresos: data.total,
-      cantidad_ingresos: data.cantidad
-    }));
-
-    const resumen: IResumenIngresos = {
-      fecha,
-      total_ingresos,
-      cantidad_ingresos: ingresos.length,
-      ingresos_por_inmueble
-    };
-
-    return {
-      success: true,
-      data: resumen,
-      message: 'Resumen de ingresos obtenido exitosamente'
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Error al obtener resumen de ingresos',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    };
-  }
+    acc[key].total_ingresos += mov.monto;
+    acc[key].cantidad_ingresos += 1;
+    return acc;
+  }, {} as Record<string, IResumenIngresos['ingresos_por_inmueble'][0]>);
+  
+  return Object.values(agrupados).sort((a, b) => b.total_ingresos - a.total_ingresos);
 };
 
-export const getInmueblesParaFiltro = async (): Promise<{ success: boolean; data?: { id: string; nombre: string }[]; message: string; error?: string }> => {
-  await delay(200);
-  try {
-    return {
-      success: true,
-      data: mockInmuebles,
-      message: 'Inmuebles obtenidos exitosamente'
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: 'Error al obtener inmuebles',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    };
-  }
+// Legacy functions for backward compatibility
+export const getResumenIngresosByCriteria = async (fecha: string, id_inmueble?: string): Promise<{ success: boolean; data?: IResumenIngresos; message: string; error?: string }> => {
+  const filtros: IFiltrosIngresos = { fecha, id_inmueble };
+  const response = await getResumenIngresos(filtros);
+  return {
+    success: response.success,
+    data: response.data || undefined,
+    message: response.message,
+    error: response.success ? undefined : response.message
+  };
 };

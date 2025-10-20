@@ -5,6 +5,7 @@ import ExpensesSummary from './ExpensesSummary';
 import ExpensesTable from './ExpensesTable';
 import ExpenseDetailModal from './ExpenseDetailModal';
 import { IEgreso, IResumenEgresos, IFiltrosEgresos } from '../../interfaces/Egreso';
+import { apiFetch } from '../../auth/apiFetch';
 
 interface InmuebleOption {
   id: string;
@@ -39,16 +40,13 @@ const Deductions: React.FC = () => {
   const loadInmuebles = async () => {
     setLoadingInmuebles(true);
     try {
-      const response = await fetch('/api/inmuebles/getInmuebles');
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const inmueblesList = result.data.map((inmueble: any) => ({
-            id: inmueble.id,
-            nombre: inmueble.nombre
-          }));
-          setInmuebles(inmueblesList);
-        }
+      const result = await apiFetch('/api/egresos/getInmueblesFiltro');
+      if (result.success && Array.isArray(result.data)) {
+        const inmueblesList = result.data.map((inmueble: any) => ({
+          id: inmueble.id,
+          nombre: inmueble.nombre
+        }));
+        setInmuebles(inmueblesList);
       }
     } catch (error) {
       console.error('Error loading inmuebles:', error);
@@ -77,31 +75,21 @@ const Deductions: React.FC = () => {
         params.append('id_inmueble', filtros.id_inmueble);
       }
 
-      const [egresosResponse, resumenResponse] = await Promise.all([
-        fetch(`/api/egresos/getEgresos?${params.toString()}`),
-        fetch(`/api/egresos/getResumenEgresos?${params.toString()}`)
+      const [egresosResult, resumenResult] = await Promise.all([
+        apiFetch(`/api/egresos/getEgresos?${params.toString()}`),
+        apiFetch(`/api/egresos/getResumenEgresos?${params.toString()}`)
       ]);
 
       // Procesar respuesta de egresos
-      if (egresosResponse.ok) {
-        const egresosResult = await egresosResponse.json();
-        if (egresosResult.success && Array.isArray(egresosResult.data)) {
-          setEgresos(egresosResult.data);
-        } else {
-          setEgresos([]);
-        }
+      if (egresosResult.success && Array.isArray(egresosResult.data)) {
+        setEgresos(egresosResult.data);
       } else {
         setEgresos([]);
       }
 
       // Procesar respuesta de resumen
-      if (resumenResponse.ok) {
-        const resumenResult = await resumenResponse.json();
-        if (resumenResult.success && resumenResult.data) {
-          setResumen(resumenResult.data);
-        } else {
-          setResumen(null);
-        }
+      if (resumenResult.success && resumenResult.data) {
+        setResumen(resumenResult.data);
       } else {
         setResumen(null);
       }

@@ -108,11 +108,11 @@ const ExpensesSummary: React.FC<ExpensesSummaryProps> = ({
       </div>
 
       {/* Desglose por inmuebles (solo si no hay filtro específico) */}
-      {!inmuebleSeleccionado && resumen.egresos_por_inmueble.length > 0 && (
+      {!inmuebleSeleccionado && resumen.egresos_por_inmueble && resumen.egresos_por_inmueble.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <h3 className="text-md font-semibold text-gray-800 mb-4">Desglose por Inmueble</h3>
           <div className="space-y-3">
-            {resumen.egresos_por_inmueble.map((inmueble) => (
+            {resumen.egresos_por_inmueble?.map((inmueble) => (
               <div key={inmueble.id_inmueble} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-800">{inmueble.nombre_inmueble}</p>

@@ -20,7 +20,7 @@ export interface IIngreso {
 // Para respuestas de API
 export interface IIngresoApiResponse {
   success: boolean;
-  data?: IIngreso | IIngreso[];
+  data: IIngreso[];
   message: string;
   error?: string;
 }
@@ -30,7 +30,17 @@ export interface IResumenIngresos {
   fecha: string;
   total_ingresos: number;
   cantidad_ingresos: number;
+  promedio_ingreso: number;
+  inmueble_seleccionado: string | null;
   ingresos_por_inmueble: IIngresosPorInmueble[];
+}
+
+// Para respuesta de resumen de ingresos
+export interface IResumenIngresosApiResponse {
+  success: boolean;
+  data: IResumenIngresos | null;
+  message: string;
+  error?: string;
 }
 
 // Para agrupar ingresos por inmueble
@@ -45,4 +55,19 @@ export interface IIngresosPorInmueble {
 export interface IFiltrosIngresos {
   fecha: string;
   id_inmueble?: string; // Si está vacío, muestra todos los inmuebles
+}
+
+// Para inmuebles en el selector
+export interface IInmuebleFiltro {
+  id: string;
+  nombre: string;
+  direccion: string;
+}
+
+// Para respuesta de inmuebles filtro
+export interface IInmuebleFiltroApiResponse {
+  success: boolean;
+  data: IInmuebleFiltro[];
+  message: string;
+  error?: string;
 }

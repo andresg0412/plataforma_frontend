@@ -5,6 +5,7 @@ import IncomesSummary from './IncomesSummary';
 import IncomesTable from './IncomesTable';
 import IncomeDetailModal from './IncomeDetailModal';
 import { IIngreso, IResumenIngresos, IFiltrosIngresos } from '../../interfaces/Ingreso';
+import { apiFetch } from '../../auth/apiFetch';
 
 interface InmuebleOption {
   id: string;
@@ -39,16 +40,13 @@ const Incomes: React.FC = () => {
   const loadInmuebles = async () => {
     setLoadingInmuebles(true);
     try {
-      const response = await fetch('/api/inmuebles/getInmuebles');
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const inmueblesList = result.data.map((inmueble: any) => ({
-            id: inmueble.id,
-            nombre: inmueble.nombre
-          }));
-          setInmuebles(inmueblesList);
-        }
+      const result = await apiFetch('/api/ingresos/getInmueblesFiltro');
+      if (result.success && Array.isArray(result.data)) {
+        const inmueblesList = result.data.map((inmueble: any) => ({
+          id: inmueble.id,
+          nombre: inmueble.nombre
+        }));
+        setInmuebles(inmueblesList);
       }
     } catch (error) {
       console.error('Error loading inmuebles:', error);
@@ -77,31 +75,21 @@ const Incomes: React.FC = () => {
         params.append('id_inmueble', filtros.id_inmueble);
       }
 
-      const [ingresosResponse, resumenResponse] = await Promise.all([
-        fetch(`/api/ingresos/getIngresos?${params.toString()}`),
-        fetch(`/api/ingresos/getResumenIngresos?${params.toString()}`)
+      const [ingresosResult, resumenResult] = await Promise.all([
+        apiFetch(`/api/ingresos/getIngresos?${params.toString()}`),
+        apiFetch(`/api/ingresos/getResumenIngresos?${params.toString()}`)
       ]);
 
       // Procesar respuesta de ingresos
-      if (ingresosResponse.ok) {
-        const ingresosResult = await ingresosResponse.json();
-        if (ingresosResult.success && Array.isArray(ingresosResult.data)) {
-          setIngresos(ingresosResult.data);
-        } else {
-          setIngresos([]);
-        }
+      if (ingresosResult.success && Array.isArray(ingresosResult.data)) {
+        setIngresos(ingresosResult.data);
       } else {
         setIngresos([]);
       }
 
       // Procesar respuesta de resumen
-      if (resumenResponse.ok) {
-        const resumenResult = await resumenResponse.json();
-        if (resumenResult.success && resumenResult.data) {
-          setResumen(resumenResult.data);
-        } else {
-          setResumen(null);
-        }
+      if (resumenResult.success && resumenResult.data) {
+        setResumen(resumenResult.data);
       } else {
         setResumen(null);
       }

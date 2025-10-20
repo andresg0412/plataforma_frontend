@@ -4,7 +4,7 @@
  */
 
 // Configuración de la API externa
-const EXTERNAL_API_BASE_URL = process.env.EXTERNAL_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.API_URL || 'http://localhost:3001';
 
 /**
  * Cliente HTTP para llamadas desde el servidor (APIs internas)
@@ -18,7 +18,7 @@ export const externalApiServerFetch = async (
   options: RequestInit = {},
   token?: string
 ): Promise<any> => {
-  const url = `${EXTERNAL_API_BASE_URL}${endpoint}`;
+  const url = `${API_URL}${endpoint}`;
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -72,5 +72,9 @@ export const extractTokenFromRequest = (req: any): string | undefined => {
 export const getEmpresaIdFromToken = (token?: string): string => {
   // Por ahora retornamos un valor por defecto
   // En producción, decodificar el JWT y extraer empresa_id
-  return '1';
+  const empresaId = '1';
+  console.log('🔍 getEmpresaIdFromToken llamada:');
+  console.log('  Token recibido:', token ? 'SÍ (length: ' + token.length + ')' : 'NO');
+  console.log('  Devolviendo empresa_id:', empresaId);
+  return empresaId;
 };
