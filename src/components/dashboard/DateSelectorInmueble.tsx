@@ -42,7 +42,8 @@ const DateSelector: React.FC<DateSelectorProps> = ({
    * Formatea la fecha completa para el tooltip
    */
   const formatFullDate = (date: Date): string => {
-    return date.toLocaleDateString('es-ES', {
+    // Asegurarnos de que usamos la misma fecha sin problemas de zona horaria
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

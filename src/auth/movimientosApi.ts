@@ -7,19 +7,22 @@ import { apiFetch } from './apiFetch';
  */
 
 /**
- * Obtiene movimientos por fecha
+ * Obtiene movimientos por fecha con filtro opcional por plataforma
  * Conectado a la API externa a través de API interna
  */
-export const getMovimientosByFecha = async (fecha: string): Promise<IMovimientoApiResponse> => {
+export const getMovimientosByFecha = async (fecha: string, plataformaOrigen?: string): Promise<IMovimientoApiResponse> => {
   try {
-    console.log('🔄 Obteniendo movimientos por fecha:', fecha);
+    console.log('🔄 Obteniendo movimientos por fecha:', fecha, plataformaOrigen ? `con filtro de plataforma: ${plataformaOrigen}` : 'sin filtro de plataforma');
     
-    const response: IMovimientoApiResponse = await apiFetch(
-      `/api/movimientos/getMovimientosByFecha?fecha=${fecha}`, 
-      {
-        method: 'GET',
-      }
-    );
+    // Construir URL con parámetro opcional de plataforma
+    let url = `/api/movimientos/getMovimientosByFecha?fecha=${fecha}`;
+    if (plataformaOrigen) {
+      url += `&plataforma_origen=${plataformaOrigen}`;
+    }
+    
+    const response: IMovimientoApiResponse = await apiFetch(url, {
+      method: 'GET',
+    });
 
     console.log('✅ Movimientos por fecha obtenidos exitosamente:', Array.isArray(response.data) ? response.data.length : 1);
     return response;
@@ -134,6 +137,34 @@ export const deleteMovimiento = async (id: string): Promise<IMovimientoApiRespon
     return {
       success: false,
       message: 'Error al eliminar movimiento',
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};
+
+/**
+ * Filtra movimientos por plataforma de origen específica
+ * Conectado a la API externa a través de API interna
+ */
+export const filtrarMovimientosPorPlataforma = async (fecha: string, plataforma: string): Promise<IMovimientoApiResponse> => {
+  try {
+    console.log('🔄 Filtrando movimientos por plataforma:', { fecha, plataforma });
+    
+    const response: IMovimientoApiResponse = await apiFetch(
+      `/api/movimientos/filtrarPorPlataforma?fecha=${fecha}&plataforma=${plataforma}`, 
+      {
+        method: 'GET',
+      }
+    );
+
+    console.log('✅ Movimientos filtrados por plataforma exitosamente:', Array.isArray(response.data) ? response.data.length : 1);
+    return response;
+    
+  } catch (error) {
+    console.error('❌ Error al filtrar movimientos por plataforma:', error);
+    return {
+      success: false,
+      message: 'Error al filtrar movimientos por plataforma',
       error: error instanceof Error ? error.message : 'Error desconocido'
     };
   }

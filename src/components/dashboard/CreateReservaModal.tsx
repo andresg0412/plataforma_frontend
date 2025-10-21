@@ -4,6 +4,7 @@ import { Button } from '../atoms/Button';
 import { IReservaForm, IHuespedForm } from '../../interfaces/Reserva';
 import { getInmueblesApi } from '../../auth/getInmueblesApi';
 import { IInmueble } from '../../interfaces/Inmueble';
+import { PLATAFORMAS_ORIGEN, PlataformaOrigen } from '../../constants/plataformas';
 
 interface CreateReservaModalProps {
   open: boolean;
@@ -43,6 +44,7 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
     estado: 'pendiente',
     observaciones: '',
     id_empresa: 1, // Por ahora hardcodeado
+    plataforma_origen: 'directa', // Valor por defecto
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof IReservaForm, string>>>({});
@@ -102,6 +104,7 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
           estado: 'pendiente',
           observaciones: '',
           id_empresa: 1,
+          plataforma_origen: 'directa', // Valor por defecto
         });
       }
       setErrors({});
@@ -338,6 +341,26 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               {errors.id_inmueble && (
                 <p className="text-red-500 text-xs mt-1">{errors.id_inmueble}</p>
               )}
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Plataforma de Origen
+              </label>
+              <select
+                value={formData.plataforma_origen || 'directa'}
+                onChange={(e) => handleInputChange('plataforma_origen', e.target.value as PlataformaOrigen)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+              >
+                {PLATAFORMAS_ORIGEN.map((plataforma) => (
+                  <option key={plataforma.value} value={plataforma.value}>
+                    {plataforma.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Si no se especifica, se registrará como "Directa"
+              </p>
             </div>
 
             <div className="col-span-2">

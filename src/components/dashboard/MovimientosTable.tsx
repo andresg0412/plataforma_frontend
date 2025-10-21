@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { IMovimiento } from '../../interfaces/Movimiento';
+import PlataformaBadge from '../atoms/PlataformaBadge';
 
 interface MovimientosTableProps {
   movimientos: IMovimiento[];
@@ -112,6 +113,9 @@ const MovimientosTable: React.FC<MovimientosTableProps> = ({
                   Reserva
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Plataforma
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Método
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -159,6 +163,9 @@ const MovimientosTable: React.FC<MovimientosTableProps> = ({
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    <PlataformaBadge plataforma={movimiento.plataforma_origen} showEmpty={false} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                     {getMetodoPagoLabel(movimiento.metodo_pago)}

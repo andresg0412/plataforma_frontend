@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatDateForDisplay, addDaysToDateString, getTodayString, isToday } from '../../lib/dateUtils';
 
 interface DateSelectorProps {
   selectedDate: string;
@@ -7,28 +8,18 @@ interface DateSelectorProps {
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange }) => {
-  const formatDateForDisplay = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
   const changeDate = (days: number) => {
-    const currentDate = new Date(selectedDate);
-    currentDate.setDate(currentDate.getDate() + days);
-    onDateChange(currentDate.toISOString().split('T')[0]);
+    const newDate = addDaysToDateString(selectedDate, days);
+    onDateChange(newDate);
   };
 
   const goToToday = () => {
-    const today = new Date().toISOString().split('T')[0];
-    onDateChange(today);
+    onDateChange(getTodayString());
   };
 
-  const isToday = selectedDate === new Date().toISOString().split('T')[0];
+  const checkIsToday = () => {
+    return isToday(selectedDate);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -71,7 +62,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange 
         </div>
         
         <div className="flex items-center gap-2">
-          {!isToday && (
+          {!checkIsToday() && (
             <button
               onClick={goToToday}
               className="px-3 py-1.5 text-sm bg-tourism-teal text-white rounded-lg hover:bg-tourism-teal/90 transition-colors"
@@ -79,7 +70,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateChange 
               Hoy
             </button>
           )}
-          {isToday && (
+          {checkIsToday() && (
             <span className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg font-medium">
               Hoy
             </span>

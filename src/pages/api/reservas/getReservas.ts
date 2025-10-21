@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IReservaTableData } from '../../../interfaces/Reserva';
+import { PlataformaOrigen } from '../../../constants/plataformas';
 
 // Interfaz para la respuesta de la API externa
 interface ExternalReservaResponse {
@@ -36,6 +37,7 @@ interface ExternalReservaResponse {
   fecha_creacion: string;
   observaciones?: string;
   id_empresa: number;
+  plataforma_origen?: string;
 }
 
 interface ExternalApiResponse {
@@ -81,6 +83,7 @@ const mapReservaFromAPI = (reservaAPI: ExternalReservaResponse): IReservaTableDa
     fecha_creacion: reservaAPI.fecha_creacion,
     observaciones: reservaAPI.observaciones || '',
     id_empresa: reservaAPI.id_empresa,
+    plataforma_origen: (reservaAPI.plataforma_origen as PlataformaOrigen) || 'no_especificada',
   };
 };
 

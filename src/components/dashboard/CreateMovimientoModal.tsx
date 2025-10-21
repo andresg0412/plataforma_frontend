@@ -6,6 +6,7 @@ import { getInmueblesForMovimientos } from '../../auth/inmueblesMovimientosApi';
 import { IInmueble } from '../../interfaces/Inmueble';
 import { Button } from '../atoms/Button';
 import SimpleSpinner from './SimpleSpinner';
+import { PLATAFORMAS_ORIGEN, PlataformaOrigen } from '../../constants/plataformas';
 
 interface CreateMovimientoModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const CreateMovimientoModal: React.FC<CreateMovimientoModalProps> = ({
     monto: 0,
     id_inmueble: '',
     id_reserva: '',
+    plataforma_origen: undefined,
     metodo_pago: 'efectivo',
     comprobante: '',
     fecha: selectedDate
@@ -77,6 +79,7 @@ const CreateMovimientoModal: React.FC<CreateMovimientoModalProps> = ({
           monto: movimiento.monto,
           id_inmueble: movimiento.id_inmueble,
           id_reserva: movimiento.id_reserva || '',
+          plataforma_origen: movimiento.plataforma_origen,
           metodo_pago: movimiento.metodo_pago,
           comprobante: movimiento.comprobante || '',
           fecha: movimiento.fecha
@@ -89,6 +92,7 @@ const CreateMovimientoModal: React.FC<CreateMovimientoModalProps> = ({
           monto: 0,
           id_inmueble: '',
           id_reserva: '',
+          plataforma_origen: undefined,
           metodo_pago: 'efectivo',
           comprobante: '',
           fecha: selectedDate
@@ -363,7 +367,48 @@ const CreateMovimientoModal: React.FC<CreateMovimientoModalProps> = ({
               />
             </div>
 
-            {/* Comprobante */}
+            {/* Plataforma Origen - Solo visible si es ingreso y concepto es reserva */}
+            {formData.tipo === 'ingreso' && formData.concepto === 'reserva' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Plataforma de Origen
+                </label>
+                <select
+                  value={formData.plataforma_origen || 'directa'}
+                  onChange={(e) => handleInputChange('plataforma_origen', e.target.value as PlataformaOrigen)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tourism-teal focus:border-transparent"
+                >
+                  {PLATAFORMAS_ORIGEN.map((plataforma) => (
+                    <option key={plataforma.value} value={plataforma.value}>
+                      {plataforma.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Selecciona la plataforma desde donde se originó esta reserva
+                </p>
+              </div>
+            )}
+
+            {/* Comprobante - Solo si no es el selector de plataforma */}
+            {!(formData.tipo === 'ingreso' && formData.concepto === 'reserva') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Comprobante (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.comprobante}
+                  onChange={(e) => handleInputChange('comprobante', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tourism-teal focus:border-transparent"
+                  placeholder="Número de comprobante o referencia"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Comprobante - Fila completa si hay selector de plataforma */}
+          {formData.tipo === 'ingreso' && formData.concepto === 'reserva' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Comprobante (Opcional)
@@ -376,7 +421,7 @@ const CreateMovimientoModal: React.FC<CreateMovimientoModalProps> = ({
                 placeholder="Número de comprobante o referencia"
               />
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button

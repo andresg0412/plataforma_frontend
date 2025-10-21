@@ -1,3 +1,5 @@
+import { PlataformaOrigen } from '../constants/plataformas';
+
 export interface IHuesped {
   id: number;
   nombre: string;
@@ -34,6 +36,7 @@ export interface IReserva {
   fecha_creacion: string;
   observaciones?: string;
   id_empresa: number;
+  plataforma_origen?: PlataformaOrigen;
 }
 
 export interface IHuespedForm {
@@ -59,6 +62,7 @@ export interface IReservaForm {
   estado: 'pendiente' | 'confirmada' | 'en_proceso' | 'completada' | 'cancelada';
   observaciones?: string;
   id_empresa: number;
+  plataforma_origen?: PlataformaOrigen;
 }
 
 export interface IReservaTableData extends IReserva {

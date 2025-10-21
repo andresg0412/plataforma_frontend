@@ -1,3 +1,5 @@
+import { PlataformaOrigen } from '../constants/plataformas';
+
 // Interfaces para movimientos de caja
 export interface IMovimiento {
   id: string;
@@ -10,6 +12,7 @@ export interface IMovimiento {
   nombre_inmueble: string;
   id_reserva?: string; // Opcional
   codigo_reserva?: string; // Opcional
+  plataforma_origen?: PlataformaOrigen; // Nueva columna
   metodo_pago: 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';
   comprobante?: string; // URL o número de comprobante
   id_empresa: string;
@@ -25,6 +28,7 @@ export interface IMovimientoForm {
   monto: number;
   id_inmueble: string;
   id_reserva?: string;
+  plataforma_origen?: PlataformaOrigen; // Nueva columna
   metodo_pago: 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';
   comprobante?: string;
   fecha: string;

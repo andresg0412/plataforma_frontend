@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, Eye, Users, CreditCard } from 'lucide-react';
 import { IReservaTableData } from '../../interfaces/Reserva';
+import PlataformaBadge from '../atoms/PlataformaBadge';
 
 interface ReservasTableProps {
   reservas: IReservaTableData[];
@@ -105,6 +106,9 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
               Total Pendiente
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Plataforma
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Estado
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -115,7 +119,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {reservas.length === 0 ? (
             <tr>
-              <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+              <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
                 No hay reservas registradas
               </td>
             </tr>
@@ -186,6 +190,9 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                   )}`}>
                     {formatCurrency(reserva.total_pendiente || reserva.precio_total)}
                   </div>
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
+                  <PlataformaBadge plataforma={reserva.plataforma_origen} />
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <span className={getEstadoBadge(reserva.estado)}>

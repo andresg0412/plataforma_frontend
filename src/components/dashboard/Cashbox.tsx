@@ -13,12 +13,14 @@ import {
   getResumenDiario, 
   deleteMovimiento 
 } from '../../auth/movimientosApi';
+import { PLATAFORMAS_ORIGEN, PlataformaOrigen } from '../../constants/plataformas';
 
 const Cashbox: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
   const [movimientos, setMovimientos] = useState<IMovimiento[]>([]);
+  const [selectedPlataforma, setSelectedPlataforma] = useState<PlataformaOrigen | 'todas'>('todas');
   const [resumen, setResumen] = useState<IResumenDiario | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -37,13 +39,16 @@ const Cashbox: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [selectedDate]);
+  }, [selectedDate, selectedPlataforma]);
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // Determinar si hay un filtro de plataforma aplicado
+      const plataformaFiltro = selectedPlataforma !== 'todas' ? selectedPlataforma : undefined;
+      
       const [movimientosResponse, resumenResponse] = await Promise.all([
-        getMovimientosByFecha(selectedDate),
+        getMovimientosByFecha(selectedDate, plataformaFiltro),
         getResumenDiario(selectedDate)
       ]);
 
@@ -63,6 +68,10 @@ const Cashbox: React.FC = () => {
 
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
+  };
+
+  const handlePlataformaChange = (plataforma: PlataformaOrigen | 'todas') => {
+    setSelectedPlataforma(plataforma);
   };
 
   const handleCreateMovimiento = () => {
@@ -128,6 +137,32 @@ const Cashbox: React.FC = () => {
         selectedDate={selectedDate} 
         onDateChange={handleDateChange} 
       />
+
+      {/* Filtros */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700">
+            Filtrar por plataforma:
+          </label>
+          <select
+            value={selectedPlataforma}
+            onChange={(e) => handlePlataformaChange(e.target.value as PlataformaOrigen | 'todas')}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal focus:border-transparent text-sm"
+          >
+            <option value="todas">Todas las plataformas</option>
+            {PLATAFORMAS_ORIGEN.map((plataforma) => (
+              <option key={plataforma.value} value={plataforma.value}>
+                {plataforma.label}
+              </option>
+            ))}
+          </select>
+          {selectedPlataforma !== 'todas' && (
+            <span className="text-sm text-gray-500">
+              Mostrando solo movimientos de {PLATAFORMAS_ORIGEN.find(p => p.value === selectedPlataforma)?.label}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Daily Summary */}
       <DailySummary 

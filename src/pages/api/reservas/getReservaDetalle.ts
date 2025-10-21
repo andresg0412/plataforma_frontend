@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IReservaTableData, IHuesped } from '../../../interfaces/Reserva';
+import { PlataformaOrigen } from '../../../constants/plataformas';
 
 // Data mockeada para huéspedes (la misma que en getReservas)
 const mockHuespedes: IHuesped[] = [
@@ -179,6 +180,7 @@ const mockReservas: IReservaTableData[] = [
     fecha_creacion: '2024-08-01',
     observaciones: 'Llegada tarde, después de las 18:00',
     id_empresa: 1,
+    plataforma_origen: 'directa',
   },
   {
     id: 2,
@@ -203,6 +205,7 @@ const mockReservas: IReservaTableData[] = [
     fecha_creacion: '2024-08-05',
     observaciones: '',
     id_empresa: 1,
+    plataforma_origen: 'booking',
   },
   {
     id: 3,
@@ -227,6 +230,7 @@ const mockReservas: IReservaTableData[] = [
     fecha_creacion: '2024-07-25',
     observaciones: 'Cliente frecuente',
     id_empresa: 1,
+    plataforma_origen: 'airbnb',
   },
   {
     id: 4,
@@ -251,6 +255,7 @@ const mockReservas: IReservaTableData[] = [
     fecha_creacion: '2024-08-02',
     observaciones: 'Necesita cuna para bebé',
     id_empresa: 1,
+    plataforma_origen: 'pagina_web',
   },
   {
     id: 5,
@@ -275,6 +280,7 @@ const mockReservas: IReservaTableData[] = [
     fecha_creacion: '2024-08-03',
     observaciones: 'Cancelada por el cliente',
     id_empresa: 1,
+    plataforma_origen: 'directa',
   },
 ];
 

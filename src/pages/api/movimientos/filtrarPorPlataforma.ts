@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { externalApiServerFetch, extractTokenFromRequest, getEmpresaIdFromToken } from '../../../lib/externalApiClient';
 
-interface MovimientosResponse {
+interface FiltrarMovimientosResponse {
   success: boolean;
   data?: any[];
   message: string;
@@ -9,12 +9,12 @@ interface MovimientosResponse {
 }
 
 /**
- * API Interna: Obtener movimientos por fecha
- * GET /api/movimientos/getMovimientosByFecha?fecha=2025-10-12
+ * API Interna: Filtrar movimientos por plataforma y fecha
+ * GET /api/movimientos/filtrarPorPlataforma?fecha=2025-10-12&plataforma=airbnb
  */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<MovimientosResponse>
+  res: NextApiResponse<FiltrarMovimientosResponse>
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({
@@ -24,9 +24,9 @@ export default async function handler(
   }
 
   try {
-    const { fecha, plataforma_origen } = req.query;
+    const { fecha, plataforma } = req.query;
     
-    // Validar parámetros
+    // Validar parámetros requeridos
     if (!fecha || typeof fecha !== 'string') {
       return res.status(400).json({
         success: false,
@@ -34,19 +34,28 @@ export default async function handler(
       });
     }
 
+    if (!plataforma || typeof plataforma !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Plataforma es requerida'
+      });
+    }
+
+    // Validar que la plataforma sea válida
+    const plataformasValidas = ['airbnb', 'booking', 'pagina_web', 'directa'];
+    if (!plataformasValidas.includes(plataforma)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Plataforma no válida. Valores permitidos: ' + plataformasValidas.join(', ')
+      });
+    }
+
     // Extraer token y empresa_id
     const token = extractTokenFromRequest(req);
     const empresaId = getEmpresaIdFromToken(token);
 
-    // Construir endpoint con filtro opcional de plataforma
-    let endpoint = `/movimientos/fecha/${fecha}?empresa_id=${empresaId}`;
-    
-    // Agregar filtro de plataforma si se proporciona
-    if (plataforma_origen && typeof plataforma_origen === 'string') {
-      endpoint += `&plataforma_origen=${plataforma_origen}`;
-    }
-
-    // Llamar a la API externa
+    // Llamar a la API externa usando el endpoint específico
+    const endpoint = `/movimientos/filtrar-por-plataforma?fecha=${fecha}&plataforma=${plataforma}&empresa_id=${empresaId}`;
     const externalResponse = await externalApiServerFetch(endpoint, {
       method: 'GET'
     }, token);
@@ -55,7 +64,7 @@ export default async function handler(
     if (externalResponse.isError) {
       return res.status(400).json({
         success: false,
-        message: externalResponse.message || 'Error al obtener movimientos',
+        message: externalResponse.message || 'Error al filtrar movimientos por plataforma',
         error: externalResponse.error
       });
     }
@@ -64,11 +73,11 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       data: externalResponse.data,
-      message: 'Movimientos obtenidos exitosamente'
+      message: 'Movimientos filtrados exitosamente'
     });
 
   } catch (error) {
-    console.error('Error en API movimientos por fecha:', error);
+    console.error('Error en API filtrar movimientos por plataforma:', error);
     return res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

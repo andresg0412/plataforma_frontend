@@ -36,6 +36,7 @@ interface ExternalCreateReservaResponse {
   fecha_creacion: string;
   observaciones?: string;
   id_empresa: number;
+  plataforma_origen?: string;
 }
 
 interface ExternalApiResponse {
@@ -157,6 +158,7 @@ const mapReservaFromAPI = (reservaAPI: ExternalCreateReservaResponse): IReservaT
     fecha_creacion: reservaAPI.fecha_creacion,
     observaciones: reservaAPI.observaciones || '',
     id_empresa: reservaAPI.id_empresa,
+    plataforma_origen: reservaAPI.plataforma_origen as any, // Mapear plataforma_origen
   };
 };
 
