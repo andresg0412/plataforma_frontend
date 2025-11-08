@@ -51,6 +51,25 @@ export const EXTERNAL_API_ENDPOINTS = {
     UPDATE: (id: string) => `${EXTERNAL_API_BASE_URL}/reservas/${id}`,
     DELETE: (id: string) => `${EXTERNAL_API_BASE_URL}/reservas/${id}`,
     BY_ID: (id: string) => `${EXTERNAL_API_BASE_URL}/reservas/${id}`,
+  },
+
+  // Endpoints de Pagos de Reservas
+  PAGOS: {
+    // Gestión principal de pagos
+    BY_RESERVA: (idReserva: string | number) => `${EXTERNAL_API_BASE_URL}/api/v1/pagos/reserva/${idReserva}`,
+    CREATE: `${EXTERNAL_API_BASE_URL}/api/v1/pagos`,
+    UPDATE: (id: string | number) => `${EXTERNAL_API_BASE_URL}/api/v1/pagos/${id}`,
+    DELETE: (id: string | number) => `${EXTERNAL_API_BASE_URL}/api/v1/pagos/${id}`,
+    BY_ID: (id: string | number) => `${EXTERNAL_API_BASE_URL}/api/v1/pagos/${id}`,
+    
+    // Consultas y reportes
+    LIST: `${EXTERNAL_API_BASE_URL}/api/v1/pagos`,
+    BY_FECHA: (fecha: string) => `${EXTERNAL_API_BASE_URL}/api/v1/pagos/fecha/${fecha}`,
+    ESTADISTICAS_METODOS: `${EXTERNAL_API_BASE_URL}/api/v1/pagos/estadisticas/metodos-pago`,
+    
+    // Integración con movimientos
+    FROM_PAGO: `${EXTERNAL_API_BASE_URL}/api/v1/movimientos/from-pago`,
+    RESUMEN_FINANCIERO: (idReserva: string | number) => `${EXTERNAL_API_BASE_URL}/api/v1/reservas/${idReserva}/resumen-financiero`,
   }
 } as const;
 

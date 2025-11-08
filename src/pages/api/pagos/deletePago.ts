@@ -1,8 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPagoApiResponse } from '../../../interfaces/Pago';
+import { externalApiServerFetch, extractTokenFromRequest, getEmpresaIdFromToken } from '../../../lib/externalApiClient';
 
-// Simulamos que eliminamos el pago de los datos mock
-// En una implementación real, esto se conectaría a la base de datos
+interface DeletePagoResponse {
+  success: boolean;
+  data?: any;
+  message: string;
+  error?: string;
+}
 
 /**
  * Valida el ID del pago
@@ -23,9 +27,10 @@ const validatePagoId = (id: any): { isValid: boolean; errors: string[] } => {
 };
 
 /**
- * Elimina un pago específico
+ * API Interna: Eliminar pago
+ * DELETE /api/pagos/deletePago?id=123
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse<IPagoApiResponse>) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<DeletePagoResponse>) {
   if (req.method !== 'DELETE') {
     return res.status(405).json({
       success: false,
@@ -47,18 +52,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     
     const pagoId = parseInt(id as string);
     
-    // En una implementación real, aquí eliminarías el pago de la base de datos
-    // Por ahora solo simulamos que fue eliminado exitosamente
-    
-    console.log('✅ Pago eliminado exitosamente, ID:', pagoId);
-    
+    // Extraer token y empresa_id
+    const token = extractTokenFromRequest(req);
+    const empresaId = getEmpresaIdFromToken(token);
+
+    // Eliminar pago en la API externa
+    const endpoint = `/api/v1/pagos/${pagoId}?empresa_id=${empresaId}`;
+
+    const externalResponse = await externalApiServerFetch(endpoint, {
+      method: 'DELETE'
+    }, token);
+
+    // Verificar si la respuesta externa es exitosa
+    if (externalResponse.isError) {
+      return res.status(400).json({
+        success: false,
+        message: externalResponse.message || 'Error al eliminar pago',
+        error: externalResponse.error
+      });
+    }
+
+    // Respuesta exitosa
     return res.status(200).json({
       success: true,
       message: 'Pago eliminado exitosamente'
     });
     
   } catch (error) {
-    console.error('❌ Error eliminando pago:', error);
+    console.error('❌ Error en API proxy eliminar pago:', error);
     return res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

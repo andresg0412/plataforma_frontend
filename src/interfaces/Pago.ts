@@ -21,9 +21,21 @@ export interface IPagoForm {
   concepto?: string;
   descripcion?: string;
   comprobante?: string;
+  fecha_pago?: string;
+  id_empresa?: number;
 }
 
-// Para respuestas de API
+// Para formularios de actualización de pagos
+export interface IPagoUpdateForm {
+  monto?: number;
+  metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | 'otro';
+  concepto?: string;
+  descripcion?: string;
+  comprobante?: string;
+  fecha_pago?: string;
+}
+
+// Para respuestas de API internas
 export interface IPagoApiResponse {
   success: boolean;
   data?: IPago | IPago[];

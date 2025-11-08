@@ -1,191 +1,121 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPago, IPagoApiResponse, IPagoForm } from '../../../interfaces/Pago';
+import { externalApiServerFetch, extractTokenFromRequest, getEmpresaIdFromToken } from '../../../lib/externalApiClient';
 
-// Data mock para pagos por reserva
-const mockPagos: { [key: number]: IPago[] } = {
-  1: [
-    {
-      id: 1,
-      id_reserva: 1,
-      codigo_reserva: 'RES-001',
-      monto: 200000,
-      fecha_pago: '2024-01-15',
-      metodo_pago: 'transferencia',
-      concepto: 'Abono inicial',
-      descripcion: 'Primer abono de la reserva',
-      comprobante: 'TRF-001',
-      id_empresa: 1,
-      fecha_creacion: '2024-01-15T10:30:00.000Z',
-      fecha_actualizacion: '2024-01-15T10:30:00.000Z'
-    },
-    {
-      id: 2,
-      id_reserva: 1,
-      codigo_reserva: 'RES-001',
-      monto: 150000,
-      fecha_pago: '2024-01-20',
-      metodo_pago: 'efectivo',
-      concepto: 'Segundo abono',
-      descripcion: 'Abono parcial',
-      id_empresa: 1,
-      fecha_creacion: '2024-01-20T14:20:00.000Z',
-      fecha_actualizacion: '2024-01-20T14:20:00.000Z'
-    }
-  ],
-  2: [
-    {
-      id: 3,
-      id_reserva: 2,
-      codigo_reserva: 'RES-002',
-      monto: 300000,
-      fecha_pago: '2024-01-18',
-      metodo_pago: 'tarjeta',
-      concepto: 'Pago completo',
-      descripcion: 'Pago total de la reserva',
-      comprobante: 'TJT-001',
-      id_empresa: 1,
-      fecha_creacion: '2024-01-18T09:15:00.000Z',
-      fecha_actualizacion: '2024-01-18T09:15:00.000Z'
-    }
-  ]
-};
-
-let nextPagoId = 4; // Siguiente ID disponible
+interface PagosResponse {
+  success: boolean;
+  data?: any;
+  message: string;
+  error?: string;
+}
 
 /**
- * Valida el ID de reserva
+ * API Interna: Obtener pagos por reserva o crear nuevo pago
+ * GET /api/pagos/[id_reserva] - Obtener pagos de una reserva
+ * POST /api/pagos/[id_reserva] - Crear nuevo pago en una reserva
  */
-const validateReservaId = (id: any): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  
-  if (!id) {
-    errors.push('ID de reserva es requerido');
-  } else if (isNaN(parseInt(id as string))) {
-    errors.push('ID de reserva debe ser un número válido');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-/**
- * Valida los datos del pago
- */
-const validatePagoData = (data: IPagoForm): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  
-  if (!data.monto || data.monto <= 0) {
-    errors.push('El monto debe ser mayor a 0');
-  }
-  
-  if (!data.metodo_pago) {
-    errors.push('Método de pago es requerido');
-  }
-  
-  const metodosValidos = ['efectivo', 'transferencia', 'tarjeta', 'otro'];
-  if (data.metodo_pago && !metodosValidos.includes(data.metodo_pago)) {
-    errors.push('Método de pago no válido');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-/**
- * Obtiene los pagos de una reserva o crea un nuevo pago
- */
-export default async function handler(req: NextApiRequest, res: NextApiResponse<IPagoApiResponse>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<PagosResponse>
+) {
   try {
+    const { id_reserva } = req.query;
+    
+    // Validar ID de reserva
+    if (!id_reserva || typeof id_reserva !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de reserva es requerido'
+      });
+    }
+
+    // Extraer token y empresa_id
+    const token = extractTokenFromRequest(req);
+    const empresaId = getEmpresaIdFromToken(token);
+
     if (req.method === 'GET') {
       // Obtener pagos de una reserva
-      const { id_reserva } = req.query;
-      
-      const validation = validateReservaId(id_reserva);
-      if (!validation.isValid) {
+      const endpoint = `/api/v1/pagos/reserva/${id_reserva}?empresa_id=${empresaId}`;
+
+      const externalResponse = await externalApiServerFetch(endpoint, {
+        method: 'GET'
+      }, token);
+
+      // Verificar si la respuesta externa es exitosa
+      if (externalResponse.isError) {
         return res.status(400).json({
           success: false,
-          message: 'Datos inválidos',
-          error: validation.errors.join(', ')
+          message: externalResponse.message || 'Error al obtener pagos',
+          error: externalResponse.error
         });
       }
-      
-      const reservaId = parseInt(id_reserva as string);
-      const pagos = mockPagos[reservaId] || [];
-      
+
+      // Respuesta exitosa - adaptamos la estructura del backend
       return res.status(200).json({
         success: true,
-        data: pagos,
-        message: `${pagos.length} pagos encontrados`
+        data: externalResponse.data?.pagos || [], // El backend devuelve {pagos: [], resumen: {}}
+        message: 'Pagos obtenidos exitosamente'
       });
-      
+
     } else if (req.method === 'POST') {
       // Crear nuevo pago
-      const { id_reserva } = req.query;
-      const pagoData: IPagoForm = req.body;
-      
-      const reservaValidation = validateReservaId(id_reserva);
-      if (!reservaValidation.isValid) {
+      const pagoData = req.body;
+
+      // Validaciones básicas
+      if (!pagoData.monto || pagoData.monto <= 0) {
         return res.status(400).json({
           success: false,
-          message: 'ID de reserva inválido',
-          error: reservaValidation.errors.join(', ')
+          message: 'El monto debe ser mayor a 0'
         });
       }
-      
-      const pagoValidation = validatePagoData(pagoData);
-      if (!pagoValidation.isValid) {
+
+      if (!pagoData.metodo_pago) {
         return res.status(400).json({
           success: false,
-          message: 'Datos del pago inválidos',
-          error: pagoValidation.errors.join(', ')
+          message: 'Método de pago es requerido'
         });
       }
-      
-      const reservaId = parseInt(id_reserva as string);
-      const now = new Date().toISOString();
-      
-      const nuevoPago: IPago = {
-        id: nextPagoId++,
-        id_reserva: reservaId,
-        codigo_reserva: `RES-${reservaId.toString().padStart(3, '0')}`,
-        monto: pagoData.monto,
-        fecha_pago: new Date().toISOString().split('T')[0],
-        metodo_pago: pagoData.metodo_pago,
+
+      // Preparar payload para el backend
+      const payload = {
+        id_reserva: parseInt(id_reserva),
+        ...pagoData,
+        id_empresa: parseInt(empresaId),
         concepto: pagoData.concepto || 'Pago de reserva',
-        descripcion: pagoData.descripcion,
-        comprobante: pagoData.comprobante,
-        id_empresa: 1, // Mock empresa ID
-        fecha_creacion: now,
-        fecha_actualizacion: now
+        fecha_pago: pagoData.fecha_pago || new Date().toISOString().split('T')[0]
       };
-      
-      // Guardar en mock data
-      if (!mockPagos[reservaId]) {
-        mockPagos[reservaId] = [];
+
+      const endpoint = '/api/v1/pagos';
+
+      const externalResponse = await externalApiServerFetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      }, token);
+
+      // Verificar si la respuesta externa es exitosa
+      if (externalResponse.isError) {
+        return res.status(400).json({
+          success: false,
+          message: externalResponse.message || 'Error al crear pago',
+          error: externalResponse.error
+        });
       }
-      mockPagos[reservaId].push(nuevoPago);
-      
-      console.log('✅ Pago creado exitosamente:', nuevoPago);
-      
+
+      // Respuesta exitosa
       return res.status(201).json({
         success: true,
-        data: nuevoPago,
+        data: externalResponse.data?.pago || externalResponse.data, // Adaptamos la estructura
         message: 'Pago registrado exitosamente'
       });
-      
+
     } else {
       return res.status(405).json({
         success: false,
         message: 'Método no permitido'
       });
     }
-    
+
   } catch (error) {
-    console.error('❌ Error en API de pagos:', error);
+    console.error('Error en API pagos por reserva:', error);
     return res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

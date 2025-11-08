@@ -3,6 +3,7 @@ import { IPago, IPagoApiResponse, IPagoForm } from '../interfaces/Pago';
 
 /**
  * Registra un pago como movimiento de ingreso
+ * Función de compatibilidad para el flujo existente
  */
 const registerPagoAsMovimiento = async (pago: IPago): Promise<void> => {
   try {
@@ -29,6 +30,7 @@ const registerPagoAsMovimiento = async (pago: IPago): Promise<void> => {
 
 /**
  * Obtiene todos los pagos de una reserva específica
+ * La API interna decide si usar backend externo o mock
  */
 export const getPagosReservaApi = async (idReserva: number): Promise<IPago[]> => {
   try {
@@ -54,6 +56,7 @@ export const getPagosReservaApi = async (idReserva: number): Promise<IPago[]> =>
 
 /**
  * Obtiene todos los pagos de una reserva específica para el modal de detalle
+ * La API interna decide si usar backend externo o mock
  */
 export const getPagosReservaDetalleApi = async (idReserva: number): Promise<IPago[]> => {
   try {
@@ -79,6 +82,7 @@ export const getPagosReservaDetalleApi = async (idReserva: number): Promise<IPag
 
 /**
  * Crea un nuevo pago para una reserva
+ * La API interna decide si usar backend externo o mock
  */
 export const createPagoApi = async (idReserva: number, pagoData: IPagoForm): Promise<IPago> => {
   try {
@@ -96,13 +100,16 @@ export const createPagoApi = async (idReserva: number, pagoData: IPagoForm): Pro
     const pago = Array.isArray(response.data) ? response.data[0] : response.data;
     console.log('✅ Pago creado exitosamente:', pago);
     
-    // Registrar el pago como movimiento de ingreso
-    try {
-      await registerPagoAsMovimiento(pago);
-      console.log('✅ Pago registrado como movimiento de ingreso');
-    } catch (movimientoError) {
-      console.error('⚠️ Error registrando movimiento (pago ya fue creado):', movimientoError);
-      // No fallar el proceso completo si el movimiento falla
+    // Solo registrar movimiento en modo mock/interno (el backend externo lo hace automáticamente)
+    const useExternalApi = process.env.NEXT_PUBLIC_API_URL === 'http://localhost:3001';
+    if (!useExternalApi) {
+      try {
+        await registerPagoAsMovimiento(pago);
+        console.log('✅ Pago registrado como movimiento de ingreso');
+      } catch (movimientoError) {
+        console.error('⚠️ Error registrando movimiento (pago ya fue creado):', movimientoError);
+        // No fallar el proceso completo si el movimiento falla
+      }
     }
     
     return pago;
@@ -115,6 +122,7 @@ export const createPagoApi = async (idReserva: number, pagoData: IPagoForm): Pro
 
 /**
  * Elimina un pago específico
+ * La API interna decide si usar backend externo o mock
  */
 export const deletePagoApi = async (idPago: number): Promise<void> => {
   try {
@@ -138,6 +146,7 @@ export const deletePagoApi = async (idPago: number): Promise<void> => {
 
 /**
  * Calcula el resumen de pagos para una reserva
+ * Función de utilidad que se mantiene para compatibilidad
  */
 export const calcularResumenPagos = (pagos: IPago[]): { totalPagado: number; cantidadPagos: number } => {
   const totalPagado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
