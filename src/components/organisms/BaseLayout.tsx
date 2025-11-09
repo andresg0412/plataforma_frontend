@@ -34,9 +34,9 @@ const COMPONENTS: Record<string, React.ReactNode> = {
 const BaseLayout: React.FC = () => {
   const [activeKey, setActiveKey] = useState('main');
   return (
-    <div className="flex min-h-screen bg-white text-foreground">
+    <div className="flex min-h-screen bg-white text-foreground max-w-full overflow-hidden">
       {/* Sidebar a la izquierda, ocupa toda la altura */}
-      <aside className="w-64 border-r border-gray-200 bg-gradient-to-br from-tourism-navy via-tourism-teal to-tourism-sage shadow-md flex flex-col rounded-tr-2xl rounded-br-2xl">
+      <aside className="w-64 flex-shrink-0 border-r border-gray-200 bg-gradient-to-br from-tourism-navy via-tourism-teal to-tourism-sage shadow-md flex flex-col rounded-tr-2xl rounded-br-2xl">
         <div className="border-b border-gray-200 bg-white px-3 py-4 flex items-center space-x-3">
           <div className="bg-tourism-gold p-2 rounded-lg">
             <Logo />
@@ -55,7 +55,7 @@ const BaseLayout: React.FC = () => {
         </div>
       </aside>
       {/* Área derecha: header arriba, content abajo */}
-      <div className="flex flex-col flex-1 min-h-screen bg-white">
+      <div className="flex flex-col flex-1 min-h-screen bg-white min-w-0">
         {/* Header solo sobre el content, no sobre el sidebar */}
         <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
           <div className="flex h-16 items-center justify-between px-6">
@@ -69,8 +69,10 @@ const BaseLayout: React.FC = () => {
           </div>
         </header>
         {/* Main content debajo del header */}
-        <main className="flex-1 p-8 bg-white min-h-[calc(100vh-4rem)]">
-          {COMPONENTS[activeKey]}
+        <main className="flex-1 p-8 bg-white min-h-[calc(100vh-4rem)] overflow-hidden">
+          <div className="w-full h-full overflow-auto">
+            {COMPONENTS[activeKey]}
+          </div>
         </main>
         {/* Footer adaptado visualmente */}
         <footer className="border-t border-gray-200 bg-white px-6 py-4">

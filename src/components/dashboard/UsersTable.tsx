@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import UserRow from './UserRow';
+import ScrollableTable from '../ui/ScrollableTable';
 
 export interface IDataUserIn {
   id: string;
@@ -24,19 +25,19 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
   const { user } = useAuth();
   const canDelete = user?.permisos?.includes('eliminar_usuarios');
   return (
-    <div className="overflow-x-auto rounded shadow border">
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="px-4 py-2">Cédula</th>
-            <th className="px-4 py-2">Nombre</th>
-            <th className="px-4 py-2">Apellido</th>
-            <th className="px-4 py-2">Username</th>
-            <th className="px-4 py-2">Email</th>
-            <th className="px-4 py-2">Rol</th>
-            <th className="px-4 py-2">Empresa</th>
-            <th className="px-4 py-2">Estado</th>
-            <th className="px-4 py-2">Acciones</th>
+    <ScrollableTable className="shadow">
+      <table className="min-w-full bg-white scrollable-table">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +59,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollableTable>
   );
 };
 

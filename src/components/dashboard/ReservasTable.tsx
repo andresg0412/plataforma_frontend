@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit2, Trash2, Eye, Users, CreditCard } from 'lucide-react';
 import { IReservaTableData } from '../../interfaces/Reserva';
 import PlataformaBadge from '../atoms/PlataformaBadge';
+import ScrollableTable from '../ui/ScrollableTable';
 
 interface ReservasTableProps {
   reservas: IReservaTableData[];
@@ -78,8 +79,8 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+    <ScrollableTable className="shadow-sm">
+      <table className="min-w-full bg-white scrollable-table">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -263,7 +264,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
           )}
         </tbody>
       </table>
-    </div>
+    </ScrollableTable>
   );
 };
 
