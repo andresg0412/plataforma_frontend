@@ -21,9 +21,16 @@ export const externalApiServerFetch = async (
   const url = `${API_URL}${endpoint}`;
   
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
+
+  // Solo agregar Content-Type para peticiones que tienen body
+  const method = options.method?.toUpperCase() || 'GET';
+  const hasBody = options.body !== undefined && options.body !== null;
+  
+  if (hasBody || (method !== 'DELETE' && method !== 'GET' && method !== 'HEAD')) {
+    (headers as Record<string, string>)['Content-Type'] = 'application/json';
+  }
 
   // Agregar token si está disponible
   if (token) {

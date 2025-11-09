@@ -60,7 +60,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const endpoint = `/api/v1/pagos/${pagoId}?empresa_id=${empresaId}`;
 
     const externalResponse = await externalApiServerFetch(endpoint, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        // No incluir Content-Type para DELETE sin body
+      }
     }, token);
 
     // Verificar si la respuesta externa es exitosa
