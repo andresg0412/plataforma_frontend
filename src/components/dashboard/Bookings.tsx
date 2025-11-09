@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReservasTable from './ReservasTable';
 import CreateReservaModal from './CreateReservaModal';
 import CreateReservaButton from './CreateReservaButton';
@@ -10,15 +10,28 @@ import SuccessModal from './SuccessModal';
 import ConfirmModal from './ConfirmModal';
 import { useAuth } from '../../auth/AuthContext';
 import { IReservaForm, IReservaTableData, IHuesped } from '../../interfaces/Reserva';
+import { IPago } from '../../interfaces/Pago';
 import { 
-  getReservasApi, 
   createReservaApi, 
   editReservaApi, 
   deleteReservaApi 
 } from '../../auth/reservasApi';
+import { useReservasConTotales } from '../../hooks/useReservasConTotales';
 
 const Bookings: React.FC = () => {
-  const [reservas, setReservas] = useState<IReservaTableData[]>([]);
+  // Hook personalizado para manejar reservas con totales automáticos
+  const {
+    reservas,
+    loading,
+    error,
+    actualizarTotalesReserva,
+    actualizarReservaEnLista,
+    eliminarReservaDeLista,
+    agregarReservaALista,
+    refrescarReservas,
+  } = useReservasConTotales();
+
+  // Estados locales para modales
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -32,8 +45,6 @@ const Bookings: React.FC = () => {
   const [reservaToViewPagos, setReservaToViewPagos] = useState<IReservaTableData | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   const { user } = useAuth();
   const canCreate = user?.permisos?.includes('crear_reservas') || true; // TEMPORAL: siempre true para debugging
@@ -48,31 +59,10 @@ const Bookings: React.FC = () => {
   console.log('canDelete:', canDelete);
   console.log('========================');
 
-  /**
-   * Carga las reservas desde la API
-   */
-  const loadReservas = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getReservasApi();
-      setReservas(data);
-    } catch (error) {
-      console.error('Error cargando reservas:', error);
-      setError('Error al cargar las reservas');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadReservas();
-  }, []);
-
   const handleCreate = async (reservaData: IReservaForm) => {
     try {
       const newReserva = await createReservaApi(reservaData);
-      setReservas(prev => [...prev, newReserva]);
+      agregarReservaALista(newReserva);
       setSuccessMsg('Reserva creada exitosamente');
       setSuccessOpen(true);
       setModalOpen(false);
@@ -100,9 +90,7 @@ const Bookings: React.FC = () => {
         huespedes: reservaToEdit.huespedes
       });
       
-      setReservas(prev => prev.map(reserva => 
-        reserva.id === reservaToEdit.id ? updatedReserva : reserva
-      ));
+      actualizarReservaEnLista(updatedReserva);
       
       setSuccessMsg('Reserva actualizada exitosamente');
       setSuccessOpen(true);
@@ -126,7 +114,7 @@ const Bookings: React.FC = () => {
     
     try {
       await deleteReservaApi(reservaToDelete.id);
-      setReservas(prev => prev.filter(reserva => reserva.id !== reservaToDelete.id));
+      eliminarReservaDeLista(reservaToDelete.id);
       setSuccessMsg('Reserva eliminada exitosamente');
       setSuccessOpen(true);
     } catch (error) {
@@ -154,21 +142,23 @@ const Bookings: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Gestión de Reservas</h2>
         <CreateReservaButton
           onClick={() => canCreate && setModalOpen(true)}
           disabled={!canCreate}
         />
       </div>
+
+      {/* Tabla de reservas */}
       {loading ? (
         <div className="text-center py-8">Cargando reservas...</div>
       ) : error ? (
         <div className="text-red-500 text-center py-8">
           {error}
           <button 
-            onClick={loadReservas}
+            onClick={refrescarReservas}
             className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Reintentar
@@ -251,15 +241,19 @@ const Bookings: React.FC = () => {
           setReservaToViewPagos(null);
         }}
         reserva={reservaToViewPagos}
-        onPagoCreated={(pago) => {
-          // Aquí podrías actualizar el estado de las reservas si necesitas
-          // reflejar los cambios en tiempo real
-          console.log('Pago creado:', pago);
+        onPagoCreated={(pago: IPago) => {
+          // Actualizar automáticamente los totales de la reserva
+          if (reservaToViewPagos) {
+            console.log('✅ Pago creado, actualizando totales de reserva:', reservaToViewPagos.codigo_reserva);
+            actualizarTotalesReserva(reservaToViewPagos.id);
+          }
         }}
-        onPagoDeleted={(pagoId) => {
-          // Aquí podrías actualizar el estado de las reservas si necesitas
-          // reflejar los cambios en tiempo real
-          console.log('Pago eliminado:', pagoId);
+        onPagoDeleted={(pagoId: number) => {
+          // Actualizar automáticamente los totales de la reserva
+          if (reservaToViewPagos) {
+            console.log('✅ Pago eliminado, actualizando totales de reserva:', reservaToViewPagos.codigo_reserva);
+            actualizarTotalesReserva(reservaToViewPagos.id);
+          }
         }}
       />
       

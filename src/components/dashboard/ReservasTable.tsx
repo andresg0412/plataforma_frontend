@@ -24,6 +24,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
   canEdit = true,
   canDelete = true
 }) => {
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES');
@@ -45,7 +46,7 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
 
   const getPaymentStatus = (pagado: number, total: number) => {
     if (pagado === 0) return 'Sin abonos';
-    if (pagado === total) return 'Pagado completo';
+    if (pagado >= total) return 'Pagado totalmente';
     return 'Abono parcial';
   };
 
@@ -172,24 +173,40 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(reserva.total_reserva || reserva.precio_total)}
+                    {reserva.total_reserva !== null && reserva.total_reserva !== undefined 
+                      ? formatCurrency(reserva.total_reserva)
+                      : <span className="text-gray-500">null</span>
+                    }
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(reserva.total_pagado || 0)}
+                    {reserva.total_pagado !== null && reserva.total_pagado !== undefined 
+                      ? formatCurrency(reserva.total_pagado)
+                      : <span className="text-gray-500">null</span>
+                    }
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {getPaymentStatus(reserva.total_pagado || 0, reserva.total_reserva || reserva.precio_total)}
-                  </div>
+                  {reserva.total_pagado !== null && reserva.total_pagado !== undefined && 
+                   reserva.total_reserva !== null && reserva.total_reserva !== undefined ? (
+                    <div className="text-xs text-gray-500">
+                      {getPaymentStatus(reserva.total_pagado, reserva.total_reserva)}
+                    </div>
+                  ) : null}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className={`text-sm font-medium ${getPendingAmountColor(
-                    reserva.total_pendiente || reserva.precio_total, 
-                    reserva.total_reserva || reserva.precio_total
-                  )}`}>
-                    {formatCurrency(reserva.total_pendiente || reserva.precio_total)}
-                  </div>
+                  {reserva.total_pendiente !== null && reserva.total_pendiente !== undefined && 
+                   reserva.total_reserva !== null && reserva.total_reserva !== undefined ? (
+                    <div className={`text-sm font-medium ${getPendingAmountColor(
+                      reserva.total_pendiente, 
+                      reserva.total_reserva
+                    )}`}>
+                      {formatCurrency(reserva.total_pendiente)}
+                    </div>
+                  ) : (
+                    <div className="text-sm font-medium text-gray-900">
+                      <span className="text-gray-500">null</span>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <PlataformaBadge plataforma={reserva.plataforma_origen} />

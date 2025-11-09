@@ -147,11 +147,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const externalData: ExternalApiResponse = await response.json();
-    console.log('� Respuesta API externa:', {
+    console.log('📦 Respuesta API externa:', {
       isError: externalData.isError,
       dataCount: externalData.data?.length || 0,
       message: externalData.message
     });
+
+
 
     // Verificar si la API externa retornó error
     if (externalData.isError) {
