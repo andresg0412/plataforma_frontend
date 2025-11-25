@@ -32,7 +32,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') {
       const t = localStorage.getItem('token');
       const u = localStorage.getItem('user');
-      
       if (t && u) {
         setToken(t);
         try {
@@ -42,15 +41,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.error('Error parsing user from localStorage:', error);
           setUser(null);
         }
-      } else if (t) {
-        setToken(t);
-        try {
-          const decodedUser = jwtDecode<User>(t);
-          setUser(decodedUser);
-        } catch (error) {
-          console.error('Error decoding token:', error);
-          setUser(null);
-        }
+      } else {
+        setToken(null);
+        setUser(null);
       }
       setIsReady(true);
     }
@@ -65,16 +58,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(u);
     router.push('/dashboard');
   };
-  
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    router.push('/login');
+    router.replace('/login');
   };
 
-  if (!isReady) return <div />;
+  if (!isReady) return null;
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout }}>

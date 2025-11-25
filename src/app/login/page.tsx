@@ -26,9 +26,9 @@ export default function LoginPage() {
     try {
       const { token, user } = await loginUser(email, password);
       login(token, user);
+      // No llamar setLoading(false) aquí, el spinner se mantiene hasta que AuthProvider navegue
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
-    } finally {
       setLoading(false);
     }
   };
