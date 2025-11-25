@@ -32,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { id_empresa } = req.query;
     const apiUrl = process.env.API_URL || 'http://localhost:3001';
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
     
     console.log('Calling external API:', `${apiUrl}/propietarios/getPropietarios`);
     
@@ -40,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
