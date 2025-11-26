@@ -24,8 +24,8 @@ export interface IReserva {
     email: string;
     telefono: string;
   };
-  fecha_entrada: string;
-  fecha_salida: string;
+  fecha_inicio: string;
+  fecha_fin: string;
   numero_huespedes: number;
   huespedes: IHuesped[];
   precio_total: number; // Mantener por compatibilidad hacia atrás
@@ -52,8 +52,8 @@ export interface IHuespedForm {
 
 export interface IReservaForm {
   id_inmueble: number;
-  fecha_entrada: string;
-  fecha_salida: string;
+  fecha_inicio: string;
+  fecha_fin: string;
   numero_huespedes: number;
   huespedes: IHuespedForm[];
   precio_total: number; // Mantener por compatibilidad hacia atrás

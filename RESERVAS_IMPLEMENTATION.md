@@ -165,7 +165,7 @@ Authorization: Bearer {token}
         "telefono": "+57 300 123 4567"
       },
       "fecha_entrada": "2024-08-15",
-      "fecha_salida": "2024-08-18", 
+      "fecha_fin": "2024-08-18", 
       "numero_huespedes": 2,
       "huespedes": [
         {
@@ -217,7 +217,7 @@ Authorization: Bearer {token}
       "telefono": "+57 300 123 4567"
     },
     "fecha_entrada": "2024-08-15",
-    "fecha_salida": "2024-08-18",
+    "fecha_fin": "2024-08-18",
     "numero_huespedes": 2,
     "huespedes": [...],
     "precio_total": 450000,
@@ -244,7 +244,7 @@ Content-Type: application/json
   "huesped_email": "maria.garcia@email.com", 
   "huesped_telefono": "+57 300 123 4567",
   "fecha_entrada": "2024-08-15",
-  "fecha_salida": "2024-08-18",
+  "fecha_fin": "2024-08-18",
   "numero_huespedes": 2,
   "precio_total": 450000,
   "estado": "pendiente",
@@ -281,7 +281,7 @@ Content-Type: application/json
   "huesped_email": "maria.garcia@email.com",
   "huesped_telefono": "+57 300 123 4567", 
   "fecha_entrada": "2024-08-16",
-  "fecha_salida": "2024-08-19",
+  "fecha_fin": "2024-08-19",
   "numero_huespedes": 2,
   "precio_total": 500000,
   "estado": "confirmada",

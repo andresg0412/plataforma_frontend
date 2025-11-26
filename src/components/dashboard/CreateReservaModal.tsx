@@ -23,8 +23,8 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<IReservaForm>({
     id_inmueble: 0,
-    fecha_entrada: '',
-    fecha_salida: '',
+    fecha_inicio: '',
+    fecha_fin: '',
     numero_huespedes: 1,
     huespedes: [
       {
@@ -79,12 +79,31 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
       loadInmuebles();
       
       if (initialData) {
-        setFormData(initialData);
+        // Helper para transformar fecha ISO a YYYY-MM-DD
+        const toDateInput = (iso: string) => {
+          if (!iso) return '';
+          const d = new Date(iso);
+          // Ajuste de zona horaria para evitar desfase
+          const off = d.getTimezoneOffset();
+          d.setMinutes(d.getMinutes() - off);
+          return d.toISOString().slice(0, 10);
+        };
+
+        setFormData({
+          ...initialData,
+          estado: initialData.estado, // Asegura que el estado sea exactamente el recibido
+          fecha_inicio: toDateInput(initialData.fecha_inicio),
+          fecha_fin: toDateInput(initialData.fecha_fin),
+          huespedes: initialData.huespedes.map(h => ({
+            ...h,
+            fecha_nacimiento: toDateInput(h.fecha_nacimiento)
+          }))
+        });
       } else {
         setFormData({
           id_inmueble: 0,
-          fecha_entrada: '',
-          fecha_salida: '',
+          fecha_inicio: '',
+          fecha_fin: '',
           numero_huespedes: 1,
           huespedes: [
             {
@@ -161,17 +180,17 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
       }
     }
 
-    if (!formData.fecha_entrada) {
-      newErrors.fecha_entrada = 'La fecha de entrada es requerida';
+    if (!formData.fecha_inicio) {
+      newErrors.fecha_inicio = 'La fecha de inicio es requerida';
     }
 
-    if (!formData.fecha_salida) {
-      newErrors.fecha_salida = 'La fecha de salida es requerida';
+    if (!formData.fecha_fin) {
+      newErrors.fecha_fin = 'La fecha de fin es requerida';
     }
 
-    if (formData.fecha_entrada && formData.fecha_salida) {
-      if (new Date(formData.fecha_entrada) >= new Date(formData.fecha_salida)) {
-        newErrors.fecha_salida = 'La fecha de salida debe ser posterior a la entrada';
+    if (formData.fecha_inicio && formData.fecha_fin) {
+      if (new Date(formData.fecha_inicio) >= new Date(formData.fecha_fin)) {
+        newErrors.fecha_fin = 'La fecha de fin debe ser posterior a la inicio';
       }
     }
 
@@ -500,14 +519,14 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               </label>
               <input
                 type="date"
-                value={formData.fecha_entrada}
-                onChange={(e) => handleInputChange('fecha_entrada', e.target.value)}
+                value={formData.fecha_inicio}
+                onChange={(e) => handleInputChange('fecha_inicio', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.fecha_entrada ? 'border-red-300' : 'border-gray-300'
+                  errors.fecha_inicio ? 'border-red-300' : 'border-gray-300'
                 }`}
               />
-              {errors.fecha_entrada && (
-                <p className="text-red-500 text-xs mt-1">{errors.fecha_entrada}</p>
+              {errors.fecha_inicio && (
+                <p className="text-red-500 text-xs mt-1">{errors.fecha_inicio}</p>
               )}
             </div>
 
@@ -517,14 +536,14 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               </label>
               <input
                 type="date"
-                value={formData.fecha_salida}
-                onChange={(e) => handleInputChange('fecha_salida', e.target.value)}
+                value={formData.fecha_fin}
+                onChange={(e) => handleInputChange('fecha_fin', e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.fecha_salida ? 'border-red-300' : 'border-gray-300'
+                  errors.fecha_fin ? 'border-red-300' : 'border-gray-300'
                 }`}
               />
-              {errors.fecha_salida && (
-                <p className="text-red-500 text-xs mt-1">{errors.fecha_salida}</p>
+              {errors.fecha_fin && (
+                <p className="text-red-500 text-xs mt-1">{errors.fecha_fin}</p>
               )}
             </div>
 
@@ -595,11 +614,22 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 onChange={(e) => handleInputChange('estado', e.target.value as any)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
               >
+                {/* Opciones estándar */}
                 <option value="pendiente">Pendiente</option>
                 <option value="confirmada">Confirmada</option>
                 <option value="en_proceso">En Proceso</option>
                 <option value="completada">Completada</option>
                 <option value="cancelada">Cancelada</option>
+                {/* Si el estado actual no está en las opciones, agregarlo dinámicamente */}
+                {[
+                  'pendiente',
+                  'confirmada',
+                  'en_proceso',
+                  'completada',
+                  'cancelada',
+                ].includes(formData.estado) ? null : (
+                  <option value={formData.estado}>{formData.estado.charAt(0).toUpperCase() + formData.estado.slice(1)}</option>
+                )}
               </select>
             </div>
 

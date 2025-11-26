@@ -14,8 +14,8 @@ interface ExternalEditReservaResponse {
     email: string;
     telefono: string;
   };
-  fecha_entrada: string;
-  fecha_salida: string;
+  fecha_inicio: string;
+  fecha_fin: string;
   numero_huespedes: number;
   huespedes: Array<{
     id: number;
@@ -117,15 +117,15 @@ const validateReservaData = (data: any): { isValid: boolean; errors: string[] } 
     });
   }
 
-  if (!data.fecha_entrada || typeof data.fecha_entrada !== 'string') {
+  if (!data.fecha_inicio || typeof data.fecha_inicio !== 'string') {
     errors.push('La fecha de entrada es requerida');
   }
 
-  if (!data.fecha_salida || typeof data.fecha_salida !== 'string') {
+  if (!data.fecha_fin || typeof data.fecha_fin !== 'string') {
     errors.push('La fecha de salida es requerida');
   }
 
-  if (data.fecha_entrada && data.fecha_salida && new Date(data.fecha_entrada) >= new Date(data.fecha_salida)) {
+  if (data.fecha_inicio && data.fecha_fin && new Date(data.fecha_inicio) >= new Date(data.fecha_fin)) {
     errors.push('La fecha de salida debe ser posterior a la fecha de entrada');
   }
 
@@ -162,8 +162,8 @@ const mapReservaFromAPI = (reservaAPI: ExternalEditReservaResponse): IReservaTab
     id_inmueble: reservaAPI.id_inmueble,
     nombre_inmueble: reservaAPI.nombre_inmueble,
     huesped_principal: reservaAPI.huesped_principal,
-    fecha_entrada: reservaAPI.fecha_entrada,
-    fecha_salida: reservaAPI.fecha_salida,
+    fecha_inicio: reservaAPI.fecha_inicio,
+    fecha_fin: reservaAPI.fecha_fin,
     numero_huespedes: reservaAPI.numero_huespedes,
     huespedes: reservaAPI.huespedes,
     precio_total: reservaAPI.precio_total,
@@ -205,18 +205,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Llamada a la API externa para actualizar la reserva
+    // Antes de enviar a la API externa, revertir a los campos que espera la API externa
+    let externalBody = { ...reservaData };
+    // Si el frontend envió fecha_inicio/fecha_fin, mantenerlos; si no, mapear desde fecha_inicio/fecha_fin
+    if (!externalBody.fecha_inicio && externalBody.fecha_inicio) {
+      externalBody.fecha_inicio = externalBody.fecha_inicio;
+    }
+    if (!externalBody.fecha_fin && externalBody.fecha_fin) {
+      externalBody.fecha_fin = externalBody.fecha_fin;
+    }
+
     const apiUrl = process.env.API_URL || 'http://localhost:3001';
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
     
     try {
-      const response = await fetch(`${apiUrl}/reservas/${reservaData.id}`, {
+      const response = await fetch(`${apiUrl}/reservas/${externalBody.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(reservaData)
+        body: JSON.stringify(externalBody)
       });
 
       if (!response.ok) {

@@ -27,7 +27,10 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
 }) => {
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
     const date = new Date(dateString);
+    // isNaN(date.getTime()) es true si la fecha es inválida
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleDateString('es-ES');
   };
 
@@ -71,11 +74,12 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
   };
 
   const calcularNoches = (fechaEntrada: string, fechaSalida: string) => {
-    const entrada = new Date(fechaEntrada);
-    const salida = new Date(fechaSalida);
-    const diffTime = Math.abs(salida.getTime() - entrada.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+  const entrada = new Date(fechaEntrada);
+  const salida = new Date(fechaSalida);
+  if (isNaN(entrada.getTime()) || isNaN(salida.getTime())) return '-';
+  const diffTime = Math.abs(salida.getTime() - entrada.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
   };
 
   return (
@@ -151,11 +155,11 @@ const ReservasTable: React.FC<ReservasTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    <div>E: {formatDate(reserva.fecha_entrada)}</div>
-                    <div>S: {formatDate(reserva.fecha_salida)}</div>
+                    <div>E: {formatDate(reserva.fecha_inicio)}</div>
+                    <div>S: {formatDate(reserva.fecha_fin)}</div>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {calcularNoches(reserva.fecha_entrada, reserva.fecha_salida)} noche(s)
+                    {calcularNoches(reserva.fecha_inicio, reserva.fecha_fin)} noche(s)
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">

@@ -14,8 +14,8 @@ interface ExternalReservaResponse {
     email: string;
     telefono: string;
   };
-  fecha_entrada: string;
-  fecha_salida: string;
+  fecha_inicio: string;
+  fecha_fin: string;
   numero_huespedes: number;
   huespedes: Array<{
     id: number;
@@ -65,14 +65,20 @@ const buildApiUrl = (baseUrl: string, queryParams: Record<string, string>): stri
  * Mapea los datos de la API externa al formato interno
  */
 const mapReservaFromAPI = (reservaAPI: ExternalReservaResponse): IReservaTableData => {
+  // Helper para asegurar string ISO válido o string vacío
+  const toIsoOrEmpty = (val: any) => {
+    if (!val) return '';
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? '' : d.toISOString();
+  };
   return {
     id: reservaAPI.id,
     codigo_reserva: reservaAPI.codigo_reserva,
     id_inmueble: reservaAPI.id_inmueble,
     nombre_inmueble: reservaAPI.nombre_inmueble,
     huesped_principal: reservaAPI.huesped_principal,
-    fecha_entrada: reservaAPI.fecha_entrada,
-    fecha_salida: reservaAPI.fecha_salida,
+    fecha_inicio: toIsoOrEmpty(reservaAPI.fecha_inicio),
+    fecha_fin: toIsoOrEmpty(reservaAPI.fecha_fin),
     numero_huespedes: reservaAPI.numero_huespedes,
     huespedes: reservaAPI.huespedes,
     precio_total: reservaAPI.precio_total,
@@ -80,7 +86,7 @@ const mapReservaFromAPI = (reservaAPI: ExternalReservaResponse): IReservaTableDa
     total_pagado: reservaAPI.total_pagado,
     total_pendiente: reservaAPI.total_pendiente,
     estado: reservaAPI.estado,
-    fecha_creacion: reservaAPI.fecha_creacion,
+    fecha_creacion: toIsoOrEmpty(reservaAPI.fecha_creacion),
     observaciones: reservaAPI.observaciones || '',
     id_empresa: reservaAPI.id_empresa,
     plataforma_origen: (reservaAPI.plataforma_origen as PlataformaOrigen) || 'no_especificada',

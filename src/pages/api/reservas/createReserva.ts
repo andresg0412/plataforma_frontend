@@ -13,8 +13,8 @@ interface ExternalCreateReservaResponse {
     email: string;
     telefono: string;
   };
-  fecha_entrada: string;
-  fecha_salida: string;
+  fecha_inicio: string;
+  fecha_fin: string;
   numero_huespedes: number;
   huespedes: Array<{
     id: number;
@@ -97,15 +97,15 @@ const validateReservaData = (data: any): { isValid: boolean; errors: string[] } 
     });
   }
 
-  if (!data.fecha_entrada || typeof data.fecha_entrada !== 'string') {
+  if (!data.fecha_inicio || typeof data.fecha_inicio !== 'string') {
     errors.push('La fecha de entrada es requerida');
   }
 
-  if (!data.fecha_salida || typeof data.fecha_salida !== 'string') {
+  if (!data.fecha_fin || typeof data.fecha_fin !== 'string') {
     errors.push('La fecha de salida es requerida');
   }
 
-  if (data.fecha_entrada && data.fecha_salida && new Date(data.fecha_entrada) >= new Date(data.fecha_salida)) {
+  if (data.fecha_inicio && data.fecha_fin && new Date(data.fecha_inicio) >= new Date(data.fecha_fin)) {
     errors.push('La fecha de salida debe ser posterior a la fecha de entrada');
   }
 
@@ -146,8 +146,8 @@ const mapReservaFromAPI = (reservaAPI: ExternalCreateReservaResponse): IReservaT
     id_inmueble: reservaAPI.id_inmueble,
     nombre_inmueble: reservaAPI.nombre_inmueble,
     huesped_principal: reservaAPI.huesped_principal,
-    fecha_entrada: reservaAPI.fecha_entrada,
-    fecha_salida: reservaAPI.fecha_salida,
+    fecha_inicio: reservaAPI.fecha_inicio,
+    fecha_fin: reservaAPI.fecha_fin,
     numero_huespedes: reservaAPI.numero_huespedes,
     huespedes: reservaAPI.huespedes,
     precio_total: reservaAPI.precio_total,
@@ -199,8 +199,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       numero_huespedes: reservaData.numero_huespedes,
       huespedes_count: reservaData.huespedes.length,
       huesped_principal: reservaData.huespedes.find(h => h.es_principal)?.nombre + ' ' + reservaData.huespedes.find(h => h.es_principal)?.apellido,
-      fecha_entrada: reservaData.fecha_entrada,
-      fecha_salida: reservaData.fecha_salida,
+      fecha_inicio: reservaData.fecha_inicio,
+      fecha_fin: reservaData.fecha_fin,
       precio_total: reservaData.precio_total,
       total_reserva: reservaData.total_reserva,
       total_pagado: reservaData.total_pagado,

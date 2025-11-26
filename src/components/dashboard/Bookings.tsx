@@ -80,18 +80,37 @@ const Bookings: React.FC = () => {
 
   const handleEditSubmit = async (reservaData: IReservaForm) => {
     if (!reservaToEdit) return;
-    
+
+    // Helper para formatear fechas a YYYY-MM-DD
+    const toDateApi = (date: string) => {
+      if (!date) return '';
+      // Si ya está en formato YYYY-MM-DD, devolver igual
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+      return new Date(date).toISOString().slice(0, 10);
+    };
+
+    // Preparar huéspedes con fecha_nacimiento en formato correcto
+    const huespedes = reservaData.huespedes.map(h => ({
+      ...h,
+      fecha_nacimiento: toDateApi(h.fecha_nacimiento)
+    }));
+
     try {
-      const updatedReserva = await editReservaApi({
+      // Usar los campos correctos para el backend
+      const body: any = {
         ...reservaData,
+        fecha_inicio: reservaData.fecha_inicio,
+        fecha_fin: reservaData.fecha_fin,
         id: reservaToEdit.id,
         codigo_reserva: reservaToEdit.codigo_reserva,
         fecha_creacion: reservaToEdit.fecha_creacion,
-        huespedes: reservaToEdit.huespedes
-      });
-      
+        huespedes,
+        estado: reservaData.estado
+      };
+      const updatedReserva = await editReservaApi(body);
+
       actualizarReservaEnLista(updatedReserva);
-      
+
       setSuccessMsg('Reserva actualizada exitosamente');
       setSuccessOpen(true);
       setEditModalOpen(false);
@@ -192,8 +211,8 @@ const Bookings: React.FC = () => {
         onCreate={handleEditSubmit}
         initialData={reservaToEdit ? {
           id_inmueble: reservaToEdit.id_inmueble,
-          fecha_entrada: reservaToEdit.fecha_entrada,
-          fecha_salida: reservaToEdit.fecha_salida,
+          fecha_inicio: reservaToEdit.fecha_inicio,
+          fecha_fin: reservaToEdit.fecha_fin,
           numero_huespedes: reservaToEdit.numero_huespedes,
           huespedes: reservaToEdit.huespedes.map(huesped => ({
             nombre: huesped.nombre,
@@ -206,9 +225,9 @@ const Bookings: React.FC = () => {
             es_principal: huesped.es_principal,
           })),
           precio_total: reservaToEdit.precio_total,
-          total_reserva: reservaToEdit.total_reserva || reservaToEdit.precio_total,
-          total_pagado: reservaToEdit.total_pagado || 0,
-          estado: reservaToEdit.estado,
+          total_reserva: reservaToEdit.total_reserva,
+          total_pagado: reservaToEdit.total_pagado,
+          estado: reservaToEdit.estado, // Usar exactamente el valor recibido
           observaciones: reservaToEdit.observaciones || '',
           id_empresa: reservaToEdit.id_empresa
         } : undefined}

@@ -151,7 +151,7 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
   };
 
   const calcularPrecioPorNoche = () => {
-    const noches = calcularNoches(reserva.fecha_entrada, reserva.fecha_salida);
+    const noches = calcularNoches(reserva.fecha_inicio, reserva.fecha_fin);
     return noches > 0 ? reserva.precio_total / noches : 0;
   };
 
@@ -282,17 +282,17 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Fecha de Entrada</label>
-                <p className="text-gray-900">{formatDate(reserva.fecha_entrada)}</p>
+                <p className="text-gray-900">{formatDate(reserva.fecha_inicio)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Fecha de Salida</label>
-                <p className="text-gray-900">{formatDate(reserva.fecha_salida)}</p>
+                <p className="text-gray-900">{formatDate(reserva.fecha_fin)}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Duración</label>
                 <p className="text-gray-900 flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {calcularNoches(reserva.fecha_entrada, reserva.fecha_salida)} noche(s)
+                  {calcularNoches(reserva.fecha_inicio, reserva.fecha_fin)} noche(s)
                 </p>
               </div>
             </div>

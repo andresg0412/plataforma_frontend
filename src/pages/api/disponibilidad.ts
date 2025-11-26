@@ -24,7 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const apiUrl = process.env.API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/disponibilidad/calendario?${params.toString()}`);
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    console.log('token:', token);
+    const response = await fetch(`${apiUrl}/disponibilidad/calendario?${params.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     console.log('Fetch URL:', `${apiUrl}/disponibilidad/calendario?${params.toString()}`);
     console.log('Response Status:', response.status);
     if (!response.ok) {
