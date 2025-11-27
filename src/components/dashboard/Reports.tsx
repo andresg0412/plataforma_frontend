@@ -1,306 +1,384 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../atoms/Button';
-import FiltrosReporte from './FiltrosReporte';
-import ResumenGeneral from './ResumenGeneral';
-import GraficosReporte from './GraficosReporte';
-import DetalleInmuebles from './DetalleInmuebles';
-import { useReportePDF } from './ReportePDFGenerator';
-import { 
-  IFiltrosReporte, 
-  IReporteFinanciero, 
-  IReporteConfig 
-} from '../../interfaces/Reporte';
-import { generarReporteFinanciero } from '../../auth/reportesApi';
-import { 
-  FileText, 
-  Download, 
-  RefreshCw, 
-  AlertCircle,
-  TrendingUp
-} from 'lucide-react';
-import { cn } from "../../lib/utils";
+import { Calendar, Filter, Download, RefreshCw, AlertCircle, TrendingUp } from 'lucide-react';
+import { getReporteFinanciero, ReporteFinancieroFilters } from '../../services/reportes.service';
+import { getOpcionesReporte } from '../../auth/reportesApi';
+import { IOpcionesReporte } from '../../interfaces/Reporte';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
-// Componentes Card locales
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
-    {...props}
-  />
-));
-Card.displayName = "Card";
+// UI Components
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Input } from '../atoms/Input';
 
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-));
-CardContent.displayName = "CardContent";
+export default function NuevoReporteFinanciero() {
+    const [filters, setFilters] = useState<ReporteFinancieroFilters>({
+        fechaInicio: '',
+        fechaFin: '',
+    });
+    const [reportData, setReportData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [opciones, setOpciones] = useState<IOpcionesReporte | null>(null);
+    const [mounted, setMounted] = useState(false);
+    const [filterMode, setFilterMode] = useState<'inmueble' | 'propietario'>('inmueble');
 
-const Reports: React.FC = () => {
-  // Estados principales
-  const [filtros, setFiltros] = useState<IFiltrosReporte>({
-    tipo_reporte: 'empresa',
-    año: new Date().getFullYear(),
-    mes: new Date().getMonth() + 1,
-  });
+    const reportRef = useRef<HTMLDivElement>(null);
 
-  const [reporte, setReporte] = useState<IReporteFinanciero | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
+    useEffect(() => {
+        setMounted(true);
+        // Initialize dates on client side to avoid hydration mismatch
+        const today = new Date();
+        setFilters(prev => ({
+            ...prev,
+            fechaInicio: new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0],
+            fechaFin: new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0],
+        }));
 
-  // Referencias para captura de PDF
-  const graficosRef = useRef<HTMLDivElement>(null);
-  const { generarPDF } = useReportePDF();
+        // Initial load of companies (and potentially everything if superadmin wants to see all initially, 
+        // but let's just load companies first to let them select)
+        const loadInitialOptions = async () => {
+            const data = await getOpcionesReporte(undefined, 'empresas');
+            if (data) {
+                setOpciones(prev => ({ ...prev, empresas: data.empresas } as IOpcionesReporte));
 
-  // Generar configuración del reporte desde filtros
-  const generarConfigReporte = (): IReporteConfig => {
-    const año = filtros.año;
-    const mes = filtros.mes;
-    
-    // Calcular fechas del período
-    const fechaInicio = new Date(año, mes - 1, 1);
-    const fechaFin = new Date(año, mes, 0); // Último día del mes
-    
-    return {
-      tipo_reporte: filtros.tipo_reporte,
-      periodo: {
-        año,
-        mes,
-        fecha_inicio: fechaInicio.toISOString().split('T')[0],
-        fecha_fin: fechaFin.toISOString().split('T')[0]
-      },
-      filtros: {
-        id_empresa: filtros.id_empresa,
-        id_inmueble: filtros.id_inmueble,
-        id_propietario: filtros.id_propietario
-      }
+                // If only one company (e.g. company admin), set it automatically and load its properties/owners
+                if (data.empresas && data.empresas.length === 1) {
+                    const singleEmpresaId = Number(data.empresas[0].id);
+                    setFilters(prev => ({ ...prev, empresaId: singleEmpresaId }));
+                    // The useEffect below will handle loading properties/owners for this company
+                } else {
+                    // If superadmin with multiple companies, maybe load all properties/owners initially? 
+                    // Or wait for selection. Let's wait for selection to be efficient.
+                    // But we need to load something if they don't select a company.
+                    // For now, let's load everything if no company selected (assuming superadmin wants to see all)
+                    // OR better, let the user select.
+                }
+            }
+        };
+        loadInitialOptions();
+    }, []);
+
+    // Effect to load Properties/Owners when Company or Filter Mode changes
+    useEffect(() => {
+        const fetchOptions = async () => {
+            // Determine what to fetch based on filterMode
+            // If filterMode is 'inmueble', we need properties.
+            // If filterMode is 'propietario', we need owners.
+
+            // We always pass the selected empresaId (if any) to filter the results server-side.
+
+            if (filterMode === 'inmueble') {
+                const data = await getOpcionesReporte(filters.empresaId, 'inmuebles');
+                if (data && data.inmuebles) {
+                    setOpciones(prev => ({ ...prev, inmuebles: data.inmuebles } as IOpcionesReporte));
+                }
+            } else if (filterMode === 'propietario') {
+                const data = await getOpcionesReporte(filters.empresaId, 'propietarios');
+                if (data && data.propietarios) {
+                    setOpciones(prev => ({ ...prev, propietarios: data.propietarios } as IOpcionesReporte));
+                }
+            }
+        };
+
+        if (mounted) {
+            fetchOptions();
+        }
+    }, [filters.empresaId, filterMode, mounted]);
+
+    if (!mounted) return null;
+
+    const handleGenerateReport = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await getReporteFinanciero(filters);
+
+            // Robust data extraction to handle different nesting levels
+            let payload = null;
+
+            if (response.data && response.data.resumen) {
+                // Case 1: Standard response { isError: false, data: { ... }, ... }
+                payload = response.data;
+            } else if (response.data && response.data.data && response.data.data.resumen) {
+                // Case 2: Double nested { data: { data: { ... } } }
+                payload = response.data.data;
+            } else if (response.resumen) {
+                // Case 3: Direct payload { reservas: ..., resumen: ... }
+                payload = response;
+            }
+
+            if (!payload || !payload.resumen) {
+                console.error('Invalid data structure received:', response);
+                throw new Error('La estructura de datos recibida no es válida');
+            }
+
+            setReportData(payload);
+        } catch (err: any) {
+            console.error('Error generating report:', err);
+            setError(err.message || 'Error al generar el reporte');
+        } finally {
+            setLoading(false);
+        }
     };
-  };
 
-  // Manejar generación de reporte
-  const handleGenerarReporte = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const config = generarConfigReporte();
-      const reporteGenerado = await generarReporteFinanciero(config);
-      
-      if (reporteGenerado) {
-        setReporte(reporteGenerado);
-        setUltimaActualizacion(new Date().toLocaleString('es-CO'));
-      } else {
-        setError('No se pudo generar el reporte. Verifica los filtros seleccionados.');
-      }
-    } catch (err) {
-      console.error('Error al generar reporte:', err);
-      setError('Error al generar el reporte. Inténtalo nuevamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const handleDownloadPDF = async () => {
+        if (!reportRef.current) return;
 
-  // Manejar exportación a PDF
-  const handleExportarPDF = async () => {
-    if (!reporte) {
-      setError('Primero debes generar un reporte para exportar.');
-      return;
-    }
+        try {
+            const canvas = await html2canvas(reportRef.current, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    try {
-      setIsLoading(true);
-      await generarPDF(reporte, graficosRef.current || undefined);
-    } catch (err) {
-      console.error('Error al exportar PDF:', err);
-      setError('Error al exportar el PDF. Inténtalo nuevamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('reporte_financiero.pdf');
+        } catch (err) {
+            console.error('Error generando PDF', err);
+            setError('Error al generar el PDF');
+        }
+    };
 
-  // Validar filtros
-  const validarFiltros = (): boolean => {
-    if (filtros.tipo_reporte === 'inmueble' && !filtros.id_inmueble) {
-      setError('Debes seleccionar un inmueble para este tipo de reporte.');
-      return false;
-    }
-    return true;
-  };
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount || 0);
+    };
 
-  // Manejar cambio de filtros con validación
-  const handleFiltrosChange = (nuevosFiltros: IFiltrosReporte) => {
-    setFiltros(nuevosFiltros);
-    setError(null);
-    
-    // Limpiar reporte si cambió algo importante
-    if (reporte && (
-      nuevosFiltros.tipo_reporte !== filtros.tipo_reporte ||
-      nuevosFiltros.año !== filtros.año ||
-      nuevosFiltros.mes !== filtros.mes ||
-      nuevosFiltros.id_empresa !== filtros.id_empresa ||
-      nuevosFiltros.id_inmueble !== filtros.id_inmueble ||
-      nuevosFiltros.id_propietario !== filtros.id_propietario
-    )) {
-      setReporte(null);
-      setUltimaActualizacion(null);
-    }
-  };
-
-  const manejarGenerarReporte = () => {
-    if (validarFiltros()) {
-      handleGenerarReporte();
-    }
-  };
-
-  return (
-    <div className="space-y-6 p-6">
-      {/* Encabezado */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-blue-600" />
-            Reportes Financieros
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Análisis detallado de ingresos, egresos y rentabilidad
-          </p>
-        </div>
-        
-        {ultimaActualizacion && (
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Última actualización:</p>
-            <p className="text-sm font-medium">{ultimaActualizacion}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Filtros */}
-      <FiltrosReporte
-        filtros={filtros}
-        onFiltrosChange={handleFiltrosChange}
-        onGenerarReporte={manejarGenerarReporte}
-        onExportarPDF={handleExportarPDF}
-        isLoading={isLoading}
-      />
-
-      {/* Mensajes de error */}
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="h-5 w-5" />
-              <span>{error}</span>
+    return (
+        <div className="space-y-6 p-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold flex items-center gap-2">
+                    <TrendingUp className="h-8 w-8 text-blue-600" />
+                    Informe Financiero
+                </h1>
             </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Loading */}
-      {isLoading && (
-        <Card>
-          <CardContent className="p-8">
-            <div className="flex items-center justify-center space-x-3">
-              <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-              <span className="text-lg">Generando reporte...</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Contenido del reporte */}
-      {reporte && !isLoading && (
-        <div className="space-y-6">
-          {/* Resumen General */}
-          <ResumenGeneral resumen={reporte.resumen_general} />
-
-          {/* Gráficos */}
-          <Card>
-            <CardContent className="p-6">
-              <div ref={graficosRef}>
-                <GraficosReporte datos={reporte.graficos} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Detalle por Inmuebles */}
-          {reporte.detalle_inmuebles.length > 0 && (
+            {/* Filters */}
             <Card>
-              <CardContent className="p-6">
-                <DetalleInmuebles inmuebles={reporte.detalle_inmuebles} />
-              </CardContent>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Filter size={20} /> Filtros</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Fecha Inicio</label>
+                            <Input
+                                type="date"
+                                value={filters.fechaInicio}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, fechaInicio: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Fecha Fin</label>
+                            <Input
+                                type="date"
+                                value={filters.fechaFin}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilters({ ...filters, fechaFin: e.target.value })}
+                            />
+                        </div>
+
+                        {/* Company Filter - Only show if more than 1 company (Superadmin) */}
+                        {opciones?.empresas && opciones.empresas.length > 1 && (
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Empresa</label>
+                                <Select onValueChange={(val) => setFilters({ ...filters, empresaId: val === 'all' ? undefined : Number(val) })}>
+                                    <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas</SelectItem>
+                                        {opciones.empresas.map(e => (
+                                            <SelectItem key={e.id} value={e.id.toString()}>{e.nombre}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Filter By Selector */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Filtrar por</label>
+                            <Select
+                                value={filterMode}
+                                onValueChange={(val: 'inmueble' | 'propietario') => {
+                                    setFilterMode(val);
+                                    setFilters({ ...filters, inmuebleId: undefined, propietarioId: undefined });
+                                }}
+                            >
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="inmueble">Inmueble</SelectItem>
+                                    <SelectItem value="propietario">Propietario</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Dynamic Dropdown (Property or Owner) */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                                {filterMode === 'propietario' ? 'Seleccionar Propietario' : 'Seleccionar Inmueble'}
+                            </label>
+
+                            {filterMode === 'propietario' ? (
+                                <Select onValueChange={(val) => setFilters({ ...filters, propietarioId: val === 'all' ? undefined : Number(val) })}>
+                                    <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {opciones?.propietarios.map(p => (
+                                            <SelectItem key={p.id} value={p.id.toString()}>{p.nombre}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <Select onValueChange={(val) => setFilters({ ...filters, inmuebleId: val === 'all' ? undefined : Number(val) })}>
+                                    <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos</SelectItem>
+                                        {opciones?.inmuebles.map(i => (
+                                            <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex gap-2 pt-4">
+                        <Button onClick={handleGenerateReport} disabled={loading} className="flex gap-2">
+                            {loading ? <RefreshCw className="animate-spin" /> : <Calendar />} Generar Informe
+                        </Button>
+                        {reportData && (
+                            <Button variant="outline" onClick={handleDownloadPDF} className="flex gap-2">
+                                <Download /> Descargar PDF
+                            </Button>
+                        )}
+                    </div>
+                </CardContent>
             </Card>
-          )}
 
-          {/* Acciones adicionales */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  onClick={manejarGenerarReporte}
-                  disabled={isLoading}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                  Actualizar Reporte
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleExportarPDF}
-                  disabled={isLoading}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Descargar PDF
-                </Button>
+            {error && (
+                <Card className="bg-red-50 border-red-200">
+                    <CardContent className="p-4 text-red-700 flex items-center gap-2">
+                        <AlertCircle /> {error}
+                    </CardContent>
+                </Card>
+            )}
 
-                <Button
-                  variant="outline"
-                  onClick={() => window.print()}
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  Imprimir
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Report Content */}
+            {reportData && (
+                <div ref={reportRef} className="space-y-6 bg-white p-4 rounded-lg">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card className="bg-green-50 border-green-200">
+                            <CardContent className="p-6">
+                                <h3 className="text-green-700 font-medium">Ingresos Totales</h3>
+                                <p className="text-2xl font-bold text-green-800">{formatCurrency(reportData.resumen.totalIngresos)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-red-50 border-red-200">
+                            <CardContent className="p-6">
+                                <h3 className="text-red-700 font-medium">Gastos Totales</h3>
+                                <p className="text-2xl font-bold text-red-800">{formatCurrency(reportData.resumen.totalEgresos)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-blue-50 border-blue-200">
+                            <CardContent className="p-6">
+                                <h3 className="text-blue-700 font-medium">Balance</h3>
+                                <p className="text-2xl font-bold text-blue-800">{formatCurrency(reportData.resumen.balance)}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Indicators */}
+                    <Card>
+                        <CardHeader><CardTitle>Indicadores Clave</CardTitle></CardHeader>
+                        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <p className="text-sm text-gray-500">Noches Ocupadas</p>
+                                <p className="text-xl font-semibold">{reportData.indicadores.nochesOcupadas}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">% Ocupación (Est.)</p>
+                                <p className="text-xl font-semibold">{reportData.indicadores.porcentajeOcupacion}%</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Total Reservas</p>
+                                <p className="text-xl font-semibold">{reportData.indicadores.totalReservas}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Ingreso Promedio / Reserva</p>
+                                <p className="text-xl font-semibold">{formatCurrency(reportData.indicadores.ingresoPorReserva)}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Reservations Table */}
+                    <Card>
+                        <CardHeader><CardTitle>Detalle de Reservas</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50 text-gray-700 uppercase">
+                                        <tr>
+                                            <th className="px-4 py-3">Código</th>
+                                            <th className="px-4 py-3">Inmueble</th>
+                                            <th className="px-4 py-3">Huésped</th>
+                                            <th className="px-4 py-3">Ingreso</th>
+                                            <th className="px-4 py-3">Salida</th>
+                                            <th className="px-4 py-3">Noches</th>
+                                            <th className="px-4 py-3">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {reportData.reservas.map((r: any) => (
+                                            <tr key={r.id_reserva} className="border-b hover:bg-gray-50">
+                                                <td className="px-4 py-3 font-medium">{r.codigo_reserva}</td>
+                                                <td className="px-4 py-3">{r.nombre_inmueble}</td>
+                                                <td className="px-4 py-3">{r.nombre_huesped} {r.apellido_huesped}</td>
+                                                <td className="px-4 py-3">{new Date(r.fecha_inicio).toLocaleDateString()}</td>
+                                                <td className="px-4 py-3">{new Date(r.fecha_fin).toLocaleDateString()}</td>
+                                                <td className="px-4 py-3">{r.noches}</td>
+                                                <td className="px-4 py-3 font-semibold">{formatCurrency(r.total_reserva)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {reportData.reservas.length === 0 && <p className="text-center py-4 text-gray-500">No hay reservas en este periodo.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Expenses Table */}
+                    <Card>
+                        <CardHeader><CardTitle>Detalle de Gastos</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-gray-50 text-gray-700 uppercase">
+                                        <tr>
+                                            <th className="px-4 py-3">Fecha</th>
+                                            <th className="px-4 py-3">Inmueble</th>
+                                            <th className="px-4 py-3">Concepto</th>
+                                            <th className="px-4 py-3">Descripción</th>
+                                            <th className="px-4 py-3">Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {reportData.gastos.map((g: any) => (
+                                            <tr key={g.id_movimiento} className="border-b hover:bg-gray-50">
+                                                <td className="px-4 py-3">{new Date(g.fecha).toLocaleDateString()}</td>
+                                                <td className="px-4 py-3">{g.nombre_inmueble}</td>
+                                                <td className="px-4 py-3 capitalize">{g.concepto.replace('_', ' ')}</td>
+                                                <td className="px-4 py-3">{g.descripcion}</td>
+                                                <td className="px-4 py-3 font-semibold text-red-600">{formatCurrency(g.monto)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {reportData.gastos.length === 0 && <p className="text-center py-4 text-gray-500">No hay gastos en este periodo.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
-      )}
-
-      {/* Estado vacío */}
-      {!reporte && !isLoading && !error && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <TrendingUp className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              ¡Genera tu primer reporte!
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Selecciona los filtros deseados y haz clic en "Generar Reporte" para ver análisis detallados de tus propiedades.
-            </p>
-            <Button 
-              onClick={manejarGenerarReporte}
-              disabled={isLoading}
-              className="flex items-center gap-2 mx-auto"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Generar Reporte
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-};
-
-export default Reports;
+    );
+}

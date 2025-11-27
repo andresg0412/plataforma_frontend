@@ -8,7 +8,7 @@ import Bookings from '../../components/dashboard/Bookings';
 import Properties from '../../components/dashboard/Properties';
 import Guests from '../../components/dashboard/Guests';
 import Availability from '../../components/dashboard/Availability';
-import Reports from '../../components/dashboard/Reports';
+import NuevoReporteFinanciero from '../../components/dashboard/Reports';
 import Cashbox from '../../components/dashboard/Cashbox';
 import Incomes from '../../components/dashboard/Incomes';
 import Deductions from '../../components/dashboard/Deductions';
@@ -28,7 +28,7 @@ const TABS = [
   { key: 'properties', label: 'Propiedades', component: <Properties /> },
   { key: 'guests', label: 'Huéspedes', component: <Guests /> },
   { key: 'availability', label: 'Disponibilidad', component: <Availability /> },
-  { key: 'reports', label: 'Reportes', component: <Reports /> },
+  { key: 'reports', label: 'Reportes (Nuevo)', component: <NuevoReporteFinanciero /> },
   { key: 'cashbox', label: 'Caja', component: <Cashbox /> },
   { key: 'incomes', label: 'Ingresos', component: <Incomes /> },
   { key: 'deductions', label: 'Egresos', component: <Deductions /> },
