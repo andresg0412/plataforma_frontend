@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReservasTable from './ReservasTable';
 import CreateReservaModal from './CreateReservaModal';
 import CreateReservaButton from './CreateReservaButton';
@@ -8,6 +8,7 @@ import HuespedesListModal from './HuespedesListModal';
 import PagosModal from './PagosModal';
 import SuccessModal from './SuccessModal';
 import ConfirmModal from './ConfirmModal';
+import MonthSelector from './MonthSelector';
 import { useAuth } from '../../auth/AuthContext';
 import { IReservaForm, IReservaTableData, IHuesped } from '../../interfaces/Reserva';
 import { IPago } from '../../interfaces/Pago';
@@ -45,6 +46,7 @@ const Bookings: React.FC = () => {
   const [reservaToViewPagos, setReservaToViewPagos] = useState<IReservaTableData | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState<number>(-1);
   
   const { user } = useAuth();
   const canCreate = user?.permisos?.includes('crear_reservas') || true; // TEMPORAL: siempre true para debugging
@@ -58,6 +60,17 @@ const Bookings: React.FC = () => {
   console.log('canEdit:', canEdit);
   console.log('canDelete:', canDelete);
   console.log('========================');
+
+  const filteredReservas = useMemo(() => {
+    if (selectedMonth === -1) {
+      return reservas;
+    }
+    return reservas.filter(reserva => {
+      const fechaInicio = new Date(reserva.fecha_inicio);
+      const fechaFin = new Date(reserva.fecha_fin);
+      return fechaInicio.getMonth() === selectedMonth || fechaFin.getMonth() === selectedMonth;
+    });
+  }, [reservas, selectedMonth]);
 
   const handleCreate = async (reservaData: IReservaForm) => {
     try {
@@ -164,10 +177,13 @@ const Bookings: React.FC = () => {
     <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Gestión de Reservas</h2>
-        <CreateReservaButton
-          onClick={() => canCreate && setModalOpen(true)}
-          disabled={!canCreate}
-        />
+        <div className="flex items-center space-x-4">
+          <MonthSelector selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} />
+          <CreateReservaButton
+            onClick={() => canCreate && setModalOpen(true)}
+            disabled={!canCreate}
+          />
+        </div>
       </div>
 
       {/* Tabla de reservas */}
@@ -185,7 +201,7 @@ const Bookings: React.FC = () => {
         </div>
       ) : (
         <ReservasTable 
-          reservas={reservas} 
+          reservas={filteredReservas} 
           onEdit={handleEdit} 
           onDelete={handleDelete}
           onViewDetail={handleViewDetail}

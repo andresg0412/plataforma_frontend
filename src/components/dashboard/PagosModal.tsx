@@ -3,7 +3,7 @@ import { X, CreditCard, Trash2, Plus } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { IPago, IPagoForm } from '../../interfaces/Pago';
 import { IReservaTableData } from '../../interfaces/Reserva';
-import { getPagosReservaApi, createPagoApi, deletePagoApi, calcularResumenPagos } from '../../auth/pagosApi';
+import { getPagosReservaApi, createPagoApi, deletePagoApi } from '../../auth/pagosApi';
 
 interface PagosModalProps {
   open: boolean;
@@ -178,12 +178,12 @@ const PagosModal: React.FC<PagosModalProps> = ({
   /**
    * Formatea valores monetarios
    */
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   /**
@@ -214,10 +214,8 @@ const PagosModal: React.FC<PagosModalProps> = ({
 
   if (!open || !reserva) return null;
 
-  const resumenPagos = calcularResumenPagos(pagos);
   const totalReserva = reserva.total_reserva || reserva.precio_total;
-  const totalPendiente = totalReserva - resumenPagos.totalPagado;
-
+  
   return (
     <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -249,17 +247,17 @@ const PagosModal: React.FC<PagosModalProps> = ({
               </div>
               <div>
                 <span className="text-gray-600">Total Pagado:</span>
-                <p className="font-semibold text-green-600">{formatCurrency(resumenPagos.totalPagado)}</p>
+                <p className="font-semibold text-green-600">{formatCurrency(reserva.total_pagado)}</p>
               </div>
               <div>
                 <span className="text-gray-600">Total Pendiente:</span>
-                <p className={`font-semibold ${totalPendiente > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {formatCurrency(totalPendiente)}
+                <p className={`font-semibold ${(reserva.total_pendiente ?? 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {formatCurrency(reserva.total_pendiente)}
                 </p>
               </div>
               <div>
                 <span className="text-gray-600">Cantidad Pagos:</span>
-                <p className="font-semibold text-gray-900">{resumenPagos.cantidadPagos}</p>
+                <p className="font-semibold text-gray-900">{pagos.length}</p>
               </div>
             </div>
           </div>

@@ -149,7 +149,10 @@ export const deletePagoApi = async (idPago: number): Promise<void> => {
  * Función de utilidad que se mantiene para compatibilidad
  */
 export const calcularResumenPagos = (pagos: IPago[]): { totalPagado: number; cantidadPagos: number } => {
-  const totalPagado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
+  const totalPagado = pagos.reduce((sum, pago) => {
+    const monto = parseFloat(pago.monto as any);
+    return sum + (isNaN(monto) ? 0 : monto);
+  }, 0);
   const cantidadPagos = pagos.length;
   
   return {

@@ -77,21 +77,6 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
   };
 
   /**
-   * Calcula el resumen de pagos en tiempo real
-   */
-  const calcularResumenPagos = () => {
-    const totalPagado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
-    const totalReserva = reserva?.total_reserva || reserva?.precio_total || 0;
-    const totalPendiente = totalReserva - totalPagado;
-    
-    return {
-      totalPagado,
-      totalPendiente,
-      cantidadPagos: pagos.length
-    };
-  };
-
-  /**
    * Obtiene el ícono del método de pago
    */
   const getMetodoPagoIcon = (metodo: string) => {
@@ -115,12 +100,12 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
     });
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null | undefined) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const getEstadoBadge = (estado: string) => {
@@ -318,37 +303,23 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
                 </p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Total Pagado/Abonado</label>
+                <label className="text-sm font-medium text-gray-600">Total Pagado/Abonadosssss</label>
                 <p className="text-gray-900 font-medium text-green-600">
-                  {formatCurrency(pagos.length > 0 ? calcularResumenPagos().totalPagado : (reserva.total_pagado || 0))}
+                  {formatCurrency(reserva.total_pagado)}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {pagos.length > 0 
-                    ? calcularResumenPagos().totalPagado === 0 ? 'Sin abonos' : 
-                      calcularResumenPagos().totalPagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
-                      'Abono parcial'
-                    : reserva.total_pagado === 0 ? 'Sin abonos' : 
-                      reserva.total_pagado === (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
-                      'Abono parcial'
-                  }
+                  {reserva.total_pagado === 0 ? 'Sin abonos' : 
+                   (reserva.total_pagado ?? 0) >= (reserva.total_reserva || reserva.precio_total) ? 'Pagado completo' : 
+                   'Abono parcial'}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Total Pendiente</label>
                 <p className={`font-medium ${
-                  pagos.length > 0 
-                    ? calcularResumenPagos().totalPendiente === 0 ? 'text-green-600' :
-                      calcularResumenPagos().totalPendiente === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
-                      'text-orange-600'
-                    : (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === 0 ? 'text-green-600' :
-                      (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0))) === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
-                      'text-orange-600'
+                  (reserva.total_pendiente ?? 0) <= 0 ? 'text-green-600' :
+                  'text-orange-600'
                 }`}>
-                  {formatCurrency(
-                    pagos.length > 0 
-                      ? calcularResumenPagos().totalPendiente 
-                      : (reserva.total_pendiente || (reserva.precio_total - (reserva.total_pagado || 0)))
-                  )}
+                  {formatCurrency(reserva.total_pendiente)}
                 </p>
               </div>
             </div>
@@ -361,34 +332,6 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
               Historial de Pagos ({pagos.length})
             </h4>
             
-            {/* Resumen actualizado en tiempo real */}
-            {pagos.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-3 bg-white rounded-lg border">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Total Pagado (Calculado)</label>
-                  <p className="text-gray-900 font-medium text-green-600">
-                    {formatCurrency(calcularResumenPagos().totalPagado)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Total Pendiente (Calculado)</label>
-                  <p className={`font-medium ${
-                    calcularResumenPagos().totalPendiente === 0 ? 'text-green-600' :
-                    calcularResumenPagos().totalPendiente === (reserva.total_reserva || reserva.precio_total) ? 'text-red-600' : 
-                    'text-orange-600'
-                  }`}>
-                    {formatCurrency(calcularResumenPagos().totalPendiente)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Número de Pagos</label>
-                  <p className="text-gray-900 font-medium">
-                    {calcularResumenPagos().cantidadPagos}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Estado de carga y errores */}
             {loadingPagos ? (
               <div className="text-center py-4">
