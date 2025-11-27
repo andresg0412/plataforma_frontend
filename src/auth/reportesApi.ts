@@ -1,17 +1,6 @@
 import { apiFetch } from './apiFetch';
-import {
-  IReporteFinanciero,
-  IReporteConfig,
-  IOpcionesReporte,
-  IReporteApiResponse
-} from '../interfaces/Reporte';
-import {
-  mockOpcionesReporte,
-  mockReporteCompleto
-} from '../lib/reportesMock';
 import { PlataformaOrigen } from '../constants/plataformas';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { IReporteConfig } from '../interfaces/Reporte';
 
 /**
  * ========================================
@@ -94,55 +83,7 @@ export const getResumenPlataforma = async (
   }
 };
 
-/**
- * ========================================
- * FUNCIONES DE REPORTES GENERALES
- * ========================================
- */
-
-// Obtener opciones para los filtros (empresas, inmuebles, propietarios)
-export const getOpcionesReporte = async (empresaId?: number, tipo?: 'empresas' | 'inmuebles' | 'propietarios'): Promise<IOpcionesReporte | null> => {
-  try {
-    const params = new URLSearchParams();
-    if (empresaId) params.append('empresaId', empresaId.toString());
-    if (tipo) params.append('tipo', tipo);
-
-    const response = await apiFetch(`/api/reportes/opciones?${params.toString()}`, {
-      method: 'GET',
-    });
-
-    if (response.success && response.data) {
-      return response.data as IOpcionesReporte;
-    }
-
-    console.error('Error al obtener opciones de reporte:', response.message);
-    return null;
-  } catch (error) {
-    console.error('Error en getOpcionesReporte:', error);
-    return null;
-  }
-};
-
-// Generar reporte financiero
-export const generarReporteFinanciero = async (config: IReporteConfig): Promise<IReporteFinanciero | null> => {
-  try {
-    // Pero idealmente debería usar el servicio real si ya existe
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const reporteConConfig = {
-      ...mockReporteCompleto,
-      config: config,
-      fecha_generacion: new Date().toISOString()
-    };
-
-    return reporteConConfig;
-  } catch (error) {
-    console.error('Error en generarReporteFinanciero:', error);
-    return null;
-  }
-};
-
-// ... (Otras funciones auxiliares se mantienen igual o se pueden simplificar si no se usan)
+// Placeholders for future implementation or unused functions
 export const getResumenRapido = async (
   tipo: 'empresa' | 'inmueble' | 'propietario',
   id: string,

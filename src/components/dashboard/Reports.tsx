@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../atoms/Button';
 import { Calendar, Filter, Download, RefreshCw, AlertCircle, TrendingUp } from 'lucide-react';
-import { getReporteFinanciero, ReporteFinancieroFilters } from '../../services/reportes.service';
-import { getOpcionesReporte } from '../../auth/reportesApi';
-import { IOpcionesReporte } from '../../interfaces/Reporte';
+import { getReporteFinanciero, ReporteFinancieroFilters, getOpcionesReporte, IOpcionesReporte } from '../../services/reportes.service';
+import { getInmueblesApi } from '../../auth/getInmueblesApi';
+import { getPropietariosApi } from '../../auth/propietariosApi';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -70,14 +70,32 @@ export default function NuevoReporteFinanciero() {
             // We always pass the selected empresaId (if any) to filter the results server-side.
 
             if (filterMode === 'inmueble') {
-                const data = await getOpcionesReporte(filters.empresaId, 'inmuebles');
-                if (data && data.inmuebles) {
-                    setOpciones(prev => ({ ...prev, inmuebles: data.inmuebles } as IOpcionesReporte));
+                try {
+                    // Use the specific endpoint for inmuebles as requested
+                    const inmueblesData = await getInmueblesApi();
+                    if (inmueblesData) {
+                        // Map to the expected format { id, nombre }
+                        const mappedInmuebles = inmueblesData.map(i => ({
+                            id: Number(i.id_inmueble),
+                            nombre: i.nombre
+                        }));
+                        setOpciones(prev => ({ ...prev, inmuebles: mappedInmuebles } as IOpcionesReporte));
+                    }
+                } catch (err) {
+                    console.error('Error fetching inmuebles:', err);
                 }
             } else if (filterMode === 'propietario') {
-                const data = await getOpcionesReporte(filters.empresaId, 'propietarios');
-                if (data && data.propietarios) {
-                    setOpciones(prev => ({ ...prev, propietarios: data.propietarios } as IOpcionesReporte));
+                try {
+                    const propietariosData = await getPropietariosApi(filters.empresaId);
+                    if (propietariosData) {
+                        const mappedPropietarios = propietariosData.map(p => ({
+                            id: Number(p.id),
+                            nombre: `${p.nombre} ${p.apellido}`.trim()
+                        }));
+                        setOpciones(prev => ({ ...prev, propietarios: mappedPropietarios } as IOpcionesReporte));
+                    }
+                } catch (err) {
+                    console.error('Error fetching propietarios:', err);
                 }
             }
         };
@@ -223,7 +241,7 @@ export default function NuevoReporteFinanciero() {
                                     <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {opciones?.propietarios.map(p => (
+                                        {opciones?.propietarios?.map(p => (
                                             <SelectItem key={p.id} value={p.id.toString()}>{p.nombre}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -233,7 +251,7 @@ export default function NuevoReporteFinanciero() {
                                     <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos</SelectItem>
-                                        {opciones?.inmuebles.map(i => (
+                                        {opciones?.inmuebles?.map(i => (
                                             <SelectItem key={i.id} value={i.id.toString()}>{i.nombre}</SelectItem>
                                         ))}
                                     </SelectContent>
