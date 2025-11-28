@@ -57,12 +57,12 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
       setLoadingInmuebles(true);
       console.log('🏠 Cargando inmuebles disponibles...');
       const inmueblesData = await getInmueblesApi();
-      
+
       // Filtrar solo inmuebles disponibles/activos para reservas
       const inmueblesDisponibles = inmueblesData.filter(
         inmueble => inmueble.estado === 'disponible'
       );
-      
+
       setInmuebles(inmueblesDisponibles);
       console.log('✅ Inmuebles cargados:', inmueblesDisponibles.length);
     } catch (error) {
@@ -77,7 +77,7 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
     if (open) {
       // Cargar inmuebles cuando se abre el modal
       loadInmuebles();
-      
+
       if (initialData) {
         // Helper para transformar fecha ISO a YYYY-MM-DD
         const toDateInput = (iso: string) => {
@@ -144,17 +144,17 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
       // Validar que cada huésped tenga los datos completos
       for (let i = 0; i < formData.huespedes.length; i++) {
         const huesped = formData.huespedes[i];
-        
+
         if (!huesped.nombre.trim()) {
           newErrors.huespedes = `El nombre del huésped ${i + 1} es requerido`;
           break;
         }
-        
+
         if (!huesped.apellido.trim()) {
           newErrors.huespedes = `El apellido del huésped ${i + 1} es requerido`;
           break;
         }
-        
+
         if (!huesped.email.trim()) {
           newErrors.huespedes = `El email del huésped ${i + 1} es requerido`;
           break;
@@ -162,17 +162,17 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
           newErrors.huespedes = `El email del huésped ${i + 1} no es válido`;
           break;
         }
-        
+
         if (!huesped.telefono.trim()) {
           newErrors.huespedes = `El teléfono del huésped ${i + 1} es requerido`;
           break;
         }
-        
+
         if (!huesped.documento_numero.trim()) {
           newErrors.huespedes = `El documento del huésped ${i + 1} es requerido`;
           break;
         }
-        
+
         if (!huesped.fecha_nacimiento) {
           newErrors.huespedes = `La fecha de nacimiento del huésped ${i + 1} es requerida`;
           break;
@@ -244,28 +244,28 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
   const handleFinancialChange = (field: 'total_reserva' | 'total_pagado', value: number) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
-      
+
       // Mantener precio_total igual a total_reserva para compatibilidad
       if (field === 'total_reserva') {
         newData.precio_total = value;
       }
-      
+
       // Calcular total_pendiente automáticamente
       const totalReserva = field === 'total_reserva' ? value : prev.total_reserva;
       const totalPagado = field === 'total_pagado' ? value : prev.total_pagado;
-      
-      // Validar que total_pagado no sea mayor que total_reserva
-      if (totalPagado > totalReserva) {
-        return prev; // No actualizar si el pago excede el total
-      }
-      
+
+      // Validar que total_pagado no sea mayor que total_reserva (solo visual, no bloquear entrada)
+      // if (totalPagado > totalReserva) {
+      //   return prev; // No actualizar si el pago excede el total
+      // }
+
       return {
         ...newData,
         total_reserva: totalReserva,
         total_pagado: totalPagado,
       };
     });
-    
+
     // Limpiar errores relacionados
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
@@ -275,11 +275,11 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
   const handleHuespedChange = (index: number, field: keyof IHuespedForm, value: string) => {
     setFormData(prev => ({
       ...prev,
-      huespedes: prev.huespedes.map((huesped, i) => 
+      huespedes: prev.huespedes.map((huesped, i) =>
         i === index ? { ...huesped, [field]: value } : huesped
       )
     }));
-    
+
     // Limpiar errores si los hay
     if (errors.huespedes) {
       setErrors(prev => ({ ...prev, huespedes: undefined }));
@@ -288,7 +288,7 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
 
   const handleNumeroHuespedesChange = (newNumero: number) => {
     const currentHuespedes = [...formData.huespedes];
-    
+
     if (newNumero > currentHuespedes.length) {
       // Agregar más huéspedes
       const nuevosHuespedes = [];
@@ -343,9 +343,8 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               <select
                 value={formData.id_inmueble}
                 onChange={(e) => handleInputChange('id_inmueble', parseInt(e.target.value))}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.id_inmueble ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.id_inmueble ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 disabled={loadingInmuebles}
               >
                 <option value={0}>
@@ -386,16 +385,18 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Número de Huéspedes *
               </label>
-              <input
-                type="number"
-                min="1"
-                max="8"
+              <select
                 value={formData.numero_huespedes}
-                onChange={(e) => handleNumeroHuespedesChange(parseInt(e.target.value) || 1)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.numero_huespedes ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
+                onChange={(e) => handleNumeroHuespedesChange(parseInt(e.target.value))}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.numero_huespedes ? 'border-red-300' : 'border-gray-300'
+                  }`}
+              >
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? 'Huésped' : 'Huéspedes'}
+                  </option>
+                ))}
+              </select>
               {errors.numero_huespedes && (
                 <p className="text-red-500 text-xs mt-1">{errors.numero_huespedes}</p>
               )}
@@ -409,13 +410,13 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               {errors.huespedes && (
                 <p className="text-red-500 text-sm mb-4">{errors.huespedes}</p>
               )}
-              
+
               {formData.huespedes.map((huesped, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
                   <h4 className="text-md font-medium text-gray-800 mb-3">
                     {index === 0 ? 'Huésped Principal' : `Huésped Acompañante ${index}`}
                   </h4>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -521,9 +522,8 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 type="date"
                 value={formData.fecha_inicio}
                 onChange={(e) => handleInputChange('fecha_inicio', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.fecha_inicio ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.fecha_inicio ? 'border-red-300' : 'border-gray-300'
+                  }`}
               />
               {errors.fecha_inicio && (
                 <p className="text-red-500 text-xs mt-1">{errors.fecha_inicio}</p>
@@ -538,9 +538,8 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 type="date"
                 value={formData.fecha_fin}
                 onChange={(e) => handleInputChange('fecha_fin', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.fecha_fin ? 'border-red-300' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.fecha_fin ? 'border-red-300' : 'border-gray-300'
+                  }`}
               />
               {errors.fecha_fin && (
                 <p className="text-red-500 text-xs mt-1">{errors.fecha_fin}</p>
@@ -552,15 +551,17 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 Total Reserva *
               </label>
               <input
-                type="number"
-                min="0"
-                step="1000"
-                value={formData.total_reserva}
-                onChange={(e) => handleFinancialChange('total_reserva', parseFloat(e.target.value) || 0)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.total_reserva ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Ej: 150000"
+                type="text"
+                value={formData.total_reserva > 0 ? new Intl.NumberFormat('es-CO').format(formData.total_reserva) : ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\./g, '').replace(/,/g, '');
+                  if (!isNaN(Number(val))) {
+                    handleFinancialChange('total_reserva', parseInt(val) || 0);
+                  }
+                }}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.total_reserva ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                placeholder="Ej: 150.000"
               />
               {errors.total_reserva && (
                 <p className="text-red-500 text-xs mt-1">{errors.total_reserva}</p>
@@ -572,15 +573,17 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 Total Pagado/Abonado
               </label>
               <input
-                type="number"
-                min="0"
-                step="1000"
-                value={formData.total_pagado}
-                onChange={(e) => handleFinancialChange('total_pagado', parseFloat(e.target.value) || 0)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${
-                  errors.total_pagado ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Ej: 50000"
+                type="text"
+                value={formData.total_pagado > 0 ? new Intl.NumberFormat('es-CO').format(formData.total_pagado) : ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\./g, '').replace(/,/g, '');
+                  if (!isNaN(Number(val))) {
+                    handleFinancialChange('total_pagado', parseInt(val) || 0);
+                  }
+                }}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal ${errors.total_pagado ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                placeholder="Ej: 50.000"
               />
               {errors.total_pagado && (
                 <p className="text-red-500 text-xs mt-1">{errors.total_pagado}</p>
@@ -594,10 +597,9 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Total Pendiente
               </label>
-              <div className={`w-full px-3 py-2 border rounded-md bg-gray-50 ${
-                (formData.total_reserva - formData.total_pagado) === 0 ? 'text-green-600' :
+              <div className={`w-full px-3 py-2 border rounded-md bg-gray-50 ${(formData.total_reserva - formData.total_pagado) === 0 ? 'text-green-600' :
                 (formData.total_reserva - formData.total_pagado) === formData.total_reserva ? 'text-red-600' : 'text-orange-600'
-              }`}>
+                }`}>
                 ${new Intl.NumberFormat('es-CO').format(formData.total_reserva - formData.total_pagado)}
               </div>
               <p className="text-xs text-gray-500 mt-1">
