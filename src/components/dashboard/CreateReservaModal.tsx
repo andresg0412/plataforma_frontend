@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '../atoms/Button';
 import { IReservaForm, IHuespedForm } from '../../interfaces/Reserva';
 import { getInmueblesApi } from '../../auth/getInmueblesApi';
@@ -50,6 +50,23 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof IReservaForm, string>>>({});
   const [inmuebles, setInmuebles] = useState<IInmueble[]>([]);
   const [loadingInmuebles, setLoadingInmuebles] = useState(false);
+  const [expandedGuest, setExpandedGuest] = useState<number>(0); // Estado para controlar qué huésped está expandido
+
+  // Helper para verificar si un huésped tiene todos los datos completos
+  const isGuestComplete = (huesped: IHuespedForm): boolean => {
+    return Boolean(
+      huesped.nombre.trim() &&
+      huesped.apellido.trim() &&
+      huesped.email.trim() &&
+      huesped.telefono.trim() &&
+      huesped.documento_numero.trim() &&
+      huesped.fecha_nacimiento
+    );
+  };
+
+  const toggleGuest = (index: number) => {
+    setExpandedGuest(prev => (prev === index ? -1 : index));
+  };
 
   // Función para cargar inmuebles desde la API
   const loadInmuebles = async () => {
@@ -401,7 +418,6 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 <p className="text-red-500 text-xs mt-1">{errors.numero_huespedes}</p>
               )}
             </div>
-
             {/* Sección de Huéspedes Dinámicos */}
             <div className="col-span-2">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -411,107 +427,134 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
                 <p className="text-red-500 text-sm mb-4">{errors.huespedes}</p>
               )}
 
-              {formData.huespedes.map((huesped, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
-                  <h4 className="text-md font-medium text-gray-800 mb-3">
-                    {index === 0 ? 'Huésped Principal' : `Huésped Acompañante ${index}`}
-                  </h4>
+              {formData.huespedes.map((huesped, index) => {
+                const isComplete = isGuestComplete(huesped);
+                const isExpanded = expandedGuest === index;
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre *
-                      </label>
-                      <input
-                        type="text"
-                        value={huesped.nombre}
-                        onChange={(e) => handleHuespedChange(index, 'nombre', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                        placeholder="Nombre"
-                      />
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+                    <div
+                      className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isExpanded ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
+                        }`}
+                      onClick={() => toggleGuest(index)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {isComplete ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-gray-400" />
+                        )}
+                        <h4 className="text-md font-medium text-gray-800">
+                          {index === 0 ? 'Huésped Principal' : `Huésped Acompañante ${index}`}
+                        </h4>
+                      </div>
+                      {isExpanded ? (
+                        <ChevronUp className="h-5 w-5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-500" />
+                      )}
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Apellido *
-                      </label>
-                      <input
-                        type="text"
-                        value={huesped.apellido}
-                        onChange={(e) => handleHuespedChange(index, 'apellido', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                        placeholder="Apellido"
-                      />
-                    </div>
+                    {isExpanded && (
+                      <div className="p-4 border-t border-gray-200 bg-white">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Nombre *
+                            </label>
+                            <input
+                              type="text"
+                              value={huesped.nombre}
+                              onChange={(e) => handleHuespedChange(index, 'nombre', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                              placeholder="Nombre"
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        value={huesped.email}
-                        onChange={(e) => handleHuespedChange(index, 'email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                        placeholder="correo@ejemplo.com"
-                      />
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Apellido *
+                            </label>
+                            <input
+                              type="text"
+                              value={huesped.apellido}
+                              onChange={(e) => handleHuespedChange(index, 'apellido', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                              placeholder="Apellido"
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Teléfono *
-                      </label>
-                      <input
-                        type="tel"
-                        value={huesped.telefono}
-                        onChange={(e) => handleHuespedChange(index, 'telefono', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                        placeholder="+57 300 123 4567"
-                      />
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Email *
+                            </label>
+                            <input
+                              type="email"
+                              value={huesped.email}
+                              onChange={(e) => handleHuespedChange(index, 'email', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                              placeholder="correo@ejemplo.com"
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tipo de Documento *
-                      </label>
-                      <select
-                        value={huesped.documento_tipo}
-                        onChange={(e) => handleHuespedChange(index, 'documento_tipo', e.target.value as any)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                      >
-                        <option value="cedula">Cédula</option>
-                        <option value="pasaporte">Pasaporte</option>
-                        <option value="tarjeta_identidad">Tarjeta de Identidad</option>
-                      </select>
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Teléfono *
+                            </label>
+                            <input
+                              type="tel"
+                              value={huesped.telefono}
+                              onChange={(e) => handleHuespedChange(index, 'telefono', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                              placeholder="+57 300 123 4567"
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Número de Documento *
-                      </label>
-                      <input
-                        type="text"
-                        value={huesped.documento_numero}
-                        onChange={(e) => handleHuespedChange(index, 'documento_numero', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                        placeholder="Número de documento"
-                      />
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Tipo de Documento *
+                            </label>
+                            <select
+                              value={huesped.documento_tipo}
+                              onChange={(e) => handleHuespedChange(index, 'documento_tipo', e.target.value as any)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                            >
+                              <option value="cedula">Cédula</option>
+                              <option value="pasaporte">Pasaporte</option>
+                              <option value="tarjeta_identidad">Tarjeta de Identidad</option>
+                            </select>
+                          </div>
 
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Fecha de Nacimiento *
-                      </label>
-                      <input
-                        type="date"
-                        value={huesped.fecha_nacimiento}
-                        onChange={(e) => handleHuespedChange(index, 'fecha_nacimiento', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
-                      />
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Número de Documento *
+                            </label>
+                            <input
+                              type="text"
+                              value={huesped.documento_numero}
+                              onChange={(e) => handleHuespedChange(index, 'documento_numero', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                              placeholder="Número de documento"
+                            />
+                          </div>
+
+                          <div className="col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Fecha de Nacimiento *
+                            </label>
+                            <input
+                              type="date"
+                              value={huesped.fecha_nacimiento}
+                              onChange={(e) => handleHuespedChange(index, 'fecha_nacimiento', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tourism-teal"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div>
@@ -665,8 +708,8 @@ const CreateReservaModal: React.FC<CreateReservaModalProps> = ({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
