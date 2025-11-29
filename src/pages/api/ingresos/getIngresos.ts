@@ -25,7 +25,7 @@ export default async function handler(
 
   try {
     const { fecha, id_inmueble } = req.query;
-    
+
     // Validar parámetros
     if (!fecha || typeof fecha !== 'string') {
       return res.status(400).json({
@@ -46,7 +46,7 @@ export default async function handler(
     }
 
     const empresaId = getEmpresaIdFromToken(token);
-    
+
     console.log('🔍 DEBUG INGRESOS:');
     console.log('  Token extraído:', token ? 'SÍ' : 'NO');
     console.log('  Empresa ID obtenido:', empresaId);
@@ -54,12 +54,12 @@ export default async function handler(
 
     // Construir endpoint EXACTAMENTE como movimientos
     let endpoint = `/ingresos?fecha=${fecha}&empresa_id=${empresaId}`;
-    
+
     // Agregar filtro por inmueble si está presente
     if (id_inmueble && typeof id_inmueble === 'string') {
       endpoint += `&id_inmueble=${id_inmueble}`;
     }
-    
+
     console.log('  Endpoint construido:', endpoint);
 
     // Llamar a la API externa
