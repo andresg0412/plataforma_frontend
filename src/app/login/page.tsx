@@ -46,7 +46,7 @@ export default function LoginPage() {
                 <Building2 className="h-8 w-8 text-tourism-navy" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">TourismPro</h1>
+                <h1 className="text-2xl font-bold">Waiwahost</h1>
                 <p className="text-tourism-sage/80">Gestión Inmobiliaria</p>
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function LoginPage() {
                   <div className="bg-tourism-gold p-2 rounded-lg">
                     <Building2 className="h-6 w-6 text-tourism-navy" />
                   </div>
-                  <span className="text-xl font-bold text-tourism-navy">TourismPro</span>
+                  <span className="text-xl font-bold text-tourism-navy">Waiwahost</span>
                 </div>
                 <h3 className="text-2xl font-bold text-tourism-navy mb-2">Iniciar Sesión</h3>
                 <p className="text-gray-600">Accede a tu panel de gestión inmobiliaria</p>

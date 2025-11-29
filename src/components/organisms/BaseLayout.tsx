@@ -42,7 +42,7 @@ const BaseLayout: React.FC = () => {
             <Logo />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-tourism-navy">TourismPro</h1>
+            <h1 className="font-bold text-lg text-tourism-navy">Waiwahost</h1>
             <p className="text-xs text-gray-500">Gestión Inmobiliaria</p>
           </div>
         </div>
@@ -50,8 +50,8 @@ const BaseLayout: React.FC = () => {
           <SidebarMenu activeKey={activeKey} onSelect={setActiveKey} />
         </div>
         <div className="border-t border-gray-200 bg-white p-4 text-center">
-          <p className="text-xs text-gray-500">© 2024 TourismPro</p>
-          <p className="text-xs text-gray-400">Versión 2.1.0</p>
+          <p className="text-xs text-gray-500">© 2025 Waiwahost</p>
+          <p className="text-xs text-gray-400">Versión 1.1.0</p>
         </div>
       </aside>
       {/* Área derecha: header arriba, content abajo */}
@@ -78,7 +78,7 @@ const BaseLayout: React.FC = () => {
         <footer className="border-t border-gray-200 bg-white px-6 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
             <div className="flex items-center space-x-4">
-              <span>© 2024 TourismPro. Todos los derechos reservados.</span>
+              <span>© 2025 Waiwahost. Todos los derechos reservados.</span>
             </div>
             <div className="flex items-center space-x-4 mt-2 sm:mt-0">
               <a href="#" className="hover:text-tourism-navy transition-colors">Política de Privacidad</a>

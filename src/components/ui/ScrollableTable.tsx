@@ -9,8 +9,8 @@ interface ScrollableTableProps {
  * Componente wrapper para tablas con scroll horizontal
  * Mantiene la columna de acciones fija a la derecha mientras permite scroll en las demás columnas
  */
-const ScrollableTable: React.FC<ScrollableTableProps> = ({ 
-  children, 
+const ScrollableTable: React.FC<ScrollableTableProps> = ({
+  children,
   className = ''
 }) => {
   return (
@@ -20,7 +20,7 @@ const ScrollableTable: React.FC<ScrollableTableProps> = ({
           {children}
         </div>
       </div>
-      
+
       <style jsx>{`
         .table-wrapper {
           position: relative;
@@ -42,9 +42,9 @@ const ScrollableTable: React.FC<ScrollableTableProps> = ({
           position: sticky;
           right: 0;
           z-index: 10;
-          min-width: 120px;
-          max-width: 120px;
-          width: 120px;
+          min-width: 180px;
+          max-width: 180px;
+          width: 180px;
           border-left: 1px solid #e5e7eb;
           box-shadow: -2px 0 8px -2px rgba(0, 0, 0, 0.1);
         }
