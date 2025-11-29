@@ -93,6 +93,7 @@ export interface IReservaDetalle {
   dias: number;
   monto_total: number;
   estado: string;
+  plataforma_origen?: string;
   huesped: {
     nombre: string;
     apellido: string;

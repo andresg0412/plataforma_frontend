@@ -148,10 +148,29 @@ export default function NuevoReporteFinanciero() {
             const canvas = await html2canvas(reportRef.current, { scale: 2 });
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Calculate how many pages we need
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add first page
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            // Add additional pages if needed
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
             pdf.save('reporte_financiero.pdf');
         } catch (err) {
             console.error('Error generando PDF', err);
@@ -339,6 +358,7 @@ export default function NuevoReporteFinanciero() {
                                             <th className="px-4 py-3">Código</th>
                                             <th className="px-4 py-3">Inmueble</th>
                                             <th className="px-4 py-3">Huésped</th>
+                                            <th className="px-4 py-3">Plataforma</th>
                                             <th className="px-4 py-3">Ingreso</th>
                                             <th className="px-4 py-3">Salida</th>
                                             <th className="px-4 py-3">Noches</th>
@@ -351,12 +371,21 @@ export default function NuevoReporteFinanciero() {
                                                 <td className="px-4 py-3 font-medium">{r.codigo_reserva}</td>
                                                 <td className="px-4 py-3">{r.nombre_inmueble}</td>
                                                 <td className="px-4 py-3">{r.nombre_huesped} {r.apellido_huesped}</td>
+                                                <td className="px-4 py-3 capitalize">{r.plataforma_origen || 'N/A'}</td>
                                                 <td className="px-4 py-3">{new Date(r.fecha_inicio).toLocaleDateString()}</td>
                                                 <td className="px-4 py-3">{new Date(r.fecha_fin).toLocaleDateString()}</td>
                                                 <td className="px-4 py-3">{r.noches}</td>
                                                 <td className="px-4 py-3 font-semibold">{formatCurrency(r.total_reserva)}</td>
                                             </tr>
                                         ))}
+                                        {reportData.reservas.length > 0 && (
+                                            <tr className="bg-green-50 border-t-2 border-green-200">
+                                                <td colSpan={7} className="px-4 py-3 text-right font-bold text-green-800">Total Reservas:</td>
+                                                <td className="px-4 py-3 font-bold text-green-800 text-lg">
+                                                    {formatCurrency(reportData.reservas.reduce((sum: number, r: any) => sum + Number(r.total_reserva || 0), 0))}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                                 {reportData.reservas.length === 0 && <p className="text-center py-4 text-gray-500">No hay reservas en este periodo.</p>}
@@ -389,6 +418,14 @@ export default function NuevoReporteFinanciero() {
                                                 <td className="px-4 py-3 font-semibold text-red-600">{formatCurrency(g.monto)}</td>
                                             </tr>
                                         ))}
+                                        {reportData.gastos.length > 0 && (
+                                            <tr className="bg-red-50 border-t-2 border-red-200">
+                                                <td colSpan={4} className="px-4 py-3 text-right font-bold text-red-800">Total Gastos:</td>
+                                                <td className="px-4 py-3 font-bold text-red-800 text-lg">
+                                                    {formatCurrency(reportData.gastos.reduce((sum: number, g: any) => sum + Number(g.monto || 0), 0))}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                                 {reportData.gastos.length === 0 && <p className="text-center py-4 text-gray-500">No hay gastos en este periodo.</p>}
